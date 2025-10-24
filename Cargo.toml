@@ -1,0 +1,26 @@
+[package]
+name = "chitie"
+version = "0.1.0"
+edition = "2024"
+authors = ["sangge"]
+description = "A fast Rust implementation of LinPEAS for Linux privilege escalation enumeration"
+license = "MIT"
+repository = "https://git.mamahaha.work/sangge/chitie.git"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+quick-xml = { version = "0.31", features = ["serialize"] }
+colored = "2"
+walkdir = "2"
+regex = "1"
+anyhow = "1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
