@@ -17,6 +17,7 @@ colored = "2"
 walkdir = "2"
 regex = "1"
 anyhow = "1"
+nix = { version = "0.30.1", features = ["fs"] }
 
 [profile.release]
 opt-level = "z"

@@ -6,8 +6,8 @@ pub async fn run_all_checks() -> anyhow::Result<Vec<Finding>> {
     // 创建所有检查任务
     let tasks = vec![
         tokio::spawn(checks::system_information::run()),
+        tokio::spawn(checks::container::run()),
         // tokio::spawn(checks::permissions::run()),
-        // tokio::spawn(checks::container::run()),
         // tokio::spawn(checks::cloud::run()),
         // tokio::spawn(checks::processes::run()),
         // tokio::spawn(checks::network::run()),
