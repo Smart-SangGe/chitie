@@ -91,7 +91,7 @@ pub async fn check() -> Option<Finding> {
 
         for line in meminfo.lines() {
             if let Some((key, value)) = line.split_once(':') {
-                let value = value.trim().split_whitespace().next().unwrap_or("0");
+                let value = value.split_whitespace().next().unwrap_or("0");
                 let value_kb = value.parse::<u64>().unwrap_or(0);
 
                 match key {

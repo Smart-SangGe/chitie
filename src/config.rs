@@ -28,6 +28,9 @@ pub struct Config {
     /// -f: 分析固件/文件夹
     pub firmware: Option<String>,
 
+    /// -o: 只执行选定的模块（逗号分隔）
+    pub only_modules: Option<String>,
+
     /// 输出格式
     pub output_format: OutputFormat,
 
@@ -48,6 +51,7 @@ impl Default for Config {
             password: None,
             debug: false,
             firmware: None,
+            only_modules: None,
             output_format: OutputFormat::Terminal,
             output_file: None,
             root_folder: "/".to_string(),

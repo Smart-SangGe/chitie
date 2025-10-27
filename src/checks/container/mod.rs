@@ -1,4 +1,5 @@
 /// Container checks
+mod am_i_contained;
 mod breakout;
 mod details;
 mod docker_details;
@@ -17,6 +18,8 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
         tokio::spawn(docker_details::check()),
         tokio::spawn(breakout::check()),
         tokio::spawn(rw_bind_mounts::check()),
+        // TODO: 待手动实现
+        // tokio::spawn(am_i_contained::check()),
     ];
 
     let mut findings = Vec::new();

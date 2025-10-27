@@ -35,27 +35,24 @@ pub async fn check() -> Option<Finding> {
     );
 
     // 在 extra 模式下显示已加载的模块
-    if config.extra || config.all_checks {
-        if let Ok(output) = Command::new("lsmod").output() {
-            if output.status.success() {
-                let lsmod_output = String::from_utf8_lossy(&output.stdout);
-                let module_count = lsmod_output.lines().count().saturating_sub(1); // 减去标题行
-                finding
-                    .details
-                    .push(format!("Loaded modules: {}", module_count));
+    if (config.extra || config.all_checks)
+        && let Ok(output) = Command::new("lsmod").output()
+        && output.status.success()
+    {
+        let lsmod_output = String::from_utf8_lossy(&output.stdout);
+        let module_count = lsmod_output.lines().count().saturating_sub(1); // 减去标题行
+        finding
+            .details
+            .push(format!("Loaded modules: {}", module_count));
 
-                // 只显示前 10 个模块
-                let modules: Vec<&str> = lsmod_output.lines().skip(1).take(10).collect();
-                if !modules.is_empty() {
-                    finding.details.push("".to_string());
-                    finding
-                        .details
-                        .push("First 10 loaded modules:".to_string());
-                    for module in modules {
-                        if let Some(name) = module.split_whitespace().next() {
-                            finding.details.push(format!("  - {}", name));
-                        }
-                    }
+        // 只显示前 10 个模块
+        let modules: Vec<&str> = lsmod_output.lines().skip(1).take(10).collect();
+        if !modules.is_empty() {
+            finding.details.push("".to_string());
+            finding.details.push("First 10 loaded modules:".to_string());
+            for module in modules {
+                if let Some(name) = module.split_whitespace().next() {
+                    finding.details.push(format!("  - {}", name));
                 }
             }
         }

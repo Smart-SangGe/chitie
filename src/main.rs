@@ -1,7 +1,7 @@
 use chitie::cli::Cli;
 use chitie::config::CONFIG;
-use chitie::runner;
 use chitie::output;
+use chitie::runner;
 use clap::Parser;
 
 #[tokio::main]

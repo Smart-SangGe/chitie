@@ -32,12 +32,12 @@ pub async fn check() -> Option<Finding> {
     // 检测容器类型
     let container_type = detect_container_type();
     if let Some(ctype) = &container_type {
-        finding
-            .details
-            .push(format!("Running inside: {}", ctype));
+        finding.details.push(format!("Running inside: {}", ctype));
         finding.severity = Severity::Medium;
     } else {
-        finding.details.push("Not running inside a container".to_string());
+        finding
+            .details
+            .push("Not running inside a container".to_string());
     }
 
     finding.details.push("".to_string());
@@ -45,7 +45,9 @@ pub async fn check() -> Option<Finding> {
     // 检查 Docker
     let docker_count = count_docker_containers();
     if docker_count > 0 {
-        finding.details.push(format!("Docker containers running: {}", docker_count));
+        finding
+            .details
+            .push(format!("Docker containers running: {}", docker_count));
         finding.severity = Severity::Medium;
 
         // 获取容器列表
@@ -65,7 +67,9 @@ pub async fn check() -> Option<Finding> {
     let podman_count = count_podman_containers();
     if podman_count > 0 {
         finding.details.push("".to_string());
-        finding.details.push(format!("Podman containers running: {}", podman_count));
+        finding
+            .details
+            .push(format!("Podman containers running: {}", podman_count));
         finding.severity = Severity::Medium;
     }
 
@@ -73,7 +77,9 @@ pub async fn check() -> Option<Finding> {
     let lxc_count = count_lxc_containers();
     if lxc_count > 0 {
         finding.details.push("".to_string());
-        finding.details.push(format!("LXC containers running: {}", lxc_count));
+        finding
+            .details
+            .push(format!("LXC containers running: {}", lxc_count));
         finding.severity = Severity::Medium;
     }
 

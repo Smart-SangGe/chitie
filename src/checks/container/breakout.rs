@@ -42,7 +42,9 @@ pub async fn check() -> Option<Finding> {
     finding.details.push("".to_string());
 
     // 检查安全机制
-    finding.details.push("=== Security Mechanisms ===".to_string());
+    finding
+        .details
+        .push("=== Security Mechanisms ===".to_string());
 
     // Seccomp
     if let Ok(status) = fs::read_to_string("/proc/self/status") {
@@ -50,10 +52,14 @@ pub async fn check() -> Option<Finding> {
             if line.starts_with("Seccomp:") {
                 let value = line.split(':').nth(1).unwrap_or("").trim();
                 if value == "0" {
-                    finding.details.push("WARNING: Seccomp disabled!".to_string());
+                    finding
+                        .details
+                        .push("WARNING: Seccomp disabled!".to_string());
                     finding.severity = Severity::High;
                 } else {
-                    finding.details.push(format!("Seccomp: enabled (mode {})", value));
+                    finding
+                        .details
+                        .push(format!("Seccomp: enabled (mode {})", value));
                 }
                 break;
             }
@@ -64,7 +70,9 @@ pub async fn check() -> Option<Finding> {
     if let Ok(apparmor) = fs::read_to_string("/proc/self/attr/current") {
         let apparmor = apparmor.trim();
         if apparmor == "unconfined" {
-            finding.details.push("WARNING: AppArmor unconfined!".to_string());
+            finding
+                .details
+                .push("WARNING: AppArmor unconfined!".to_string());
             finding.severity = Severity::High;
         } else {
             finding.details.push(format!("AppArmor: {}", apparmor));
@@ -75,7 +83,9 @@ pub async fn check() -> Option<Finding> {
     if fs::read_to_string("/proc/self/uid_map").is_ok() {
         finding.details.push("User namespace: enabled".to_string());
     } else {
-        finding.details.push("WARNING: User namespace disabled!".to_string());
+        finding
+            .details
+            .push("WARNING: User namespace disabled!".to_string());
     }
 
     finding.details.push("".to_string());
@@ -113,7 +123,9 @@ pub async fn check() -> Option<Finding> {
     }
 
     if dangerous_mounts.is_empty() {
-        finding.details.push("No obviously dangerous mounts detected".to_string());
+        finding
+            .details
+            .push("No obviously dangerous mounts detected".to_string());
     } else {
         finding.details.extend(dangerous_mounts);
     }
@@ -121,10 +133,11 @@ pub async fn check() -> Option<Finding> {
     finding.details.push("".to_string());
 
     // 检查容器逃逸工具
-    finding.details.push("=== Container Escape Tools ===".to_string());
+    finding
+        .details
+        .push("=== Container Escape Tools ===".to_string());
     let escape_tools = [
-        "nsenter", "unshare", "chroot", "capsh", "setcap", "getcap",
-        "docker", "kubectl", "runc",
+        "nsenter", "unshare", "chroot", "capsh", "setcap", "getcap", "docker", "kubectl", "runc",
     ];
 
     let mut found_tools = Vec::new();
@@ -143,7 +156,9 @@ pub async fn check() -> Option<Finding> {
     if found_tools.is_empty() {
         finding.details.push("No escape tools found".to_string());
     } else {
-        finding.details.push("WARNING: Escape tools available:".to_string());
+        finding
+            .details
+            .push("WARNING: Escape tools available:".to_string());
         finding.details.extend(found_tools);
     }
 
@@ -163,7 +178,9 @@ pub async fn check() -> Option<Finding> {
                 }
             }
         }
-        finding.details.push("NOTE: Use 'capsh --decode=<hex>' to decode capabilities".to_string());
+        finding
+            .details
+            .push("NOTE: Use 'capsh --decode=<hex>' to decode capabilities".to_string());
     }
 
     finding.details.push("".to_string());
@@ -174,7 +191,9 @@ pub async fn check() -> Option<Finding> {
         for entry in entries.flatten() {
             if let Ok(name) = entry.file_name().into_string() {
                 if let Ok(link) = fs::read_link(entry.path()) {
-                    finding.details.push(format!("  {}: {}", name, link.display()));
+                    finding
+                        .details
+                        .push(format!("  {}: {}", name, link.display()));
                 }
             }
         }

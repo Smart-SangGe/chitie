@@ -57,20 +57,18 @@ pub async fn check() -> Option<Finding> {
 
         // 解析版本号 (格式: 0.xx)
         let version_regex = Regex::new(r"^0\.(\d+)").ok()?;
-        if let Some(caps) = version_regex.captures(&ver) {
-            if let Ok(minor) = caps.get(1)?.as_str().parse::<u32>() {
-                if minor < 21 {
-                    finding.severity = Severity::Critical;
-                    finding.description =
-                        "VULNERABLE USBCreator configuration detected!".to_string();
-                    finding
-                        .details
-                        .push("WARNING: policykit-desktop-privileges version < 0.21".to_string());
-                    finding.details.push(
-                        "This system is vulnerable to D-Bus privilege escalation".to_string(),
-                    );
-                }
-            }
+        if let Some(caps) = version_regex.captures(&ver)
+            && let Ok(minor) = caps.get(1)?.as_str().parse::<u32>()
+            && minor < 21
+        {
+            finding.severity = Severity::Critical;
+            finding.description = "VULNERABLE USBCreator configuration detected!".to_string();
+            finding
+                .details
+                .push("WARNING: policykit-desktop-privileges version < 0.21".to_string());
+            finding
+                .details
+                .push("This system is vulnerable to D-Bus privilege escalation".to_string());
         }
     } else {
         finding
@@ -84,16 +82,16 @@ pub async fn check() -> Option<Finding> {
 /// 获取 policykit-desktop-privileges 版本
 fn get_policykit_version() -> Option<String> {
     // 方法1: 使用 dpkg -l
-    if let Ok(output) = Command::new("dpkg").arg("-l").output() {
-        if output.status.success() {
-            let output_str = String::from_utf8_lossy(&output.stdout);
-            for line in output_str.lines() {
-                if line.contains("policykit-desktop-privileges") {
-                    // 提取版本号
-                    let version_regex = Regex::new(r"[0-9][0-9a-zA-Z\.]+").ok()?;
-                    if let Some(mat) = version_regex.find(line) {
-                        return Some(mat.as_str().to_string());
-                    }
+    if let Ok(output) = Command::new("dpkg").arg("-l").output()
+        && output.status.success()
+    {
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let version_regex = Regex::new(r"[0-9][0-9a-zA-Z\.]+").ok()?;
+        for line in output_str.lines() {
+            if line.contains("policykit-desktop-privileges") {
+                // 提取版本号
+                if let Some(mat) = version_regex.find(line) {
+                    return Some(mat.as_str().to_string());
                 }
             }
         }
@@ -104,16 +102,15 @@ fn get_policykit_version() -> Option<String> {
         .arg("policy")
         .arg("policykit-desktop-privileges")
         .output()
+        && output.status.success()
     {
-        if output.status.success() {
-            let output_str = String::from_utf8_lossy(&output.stdout);
-            for line in output_str.lines() {
-                if line.contains("***") {
-                    // 提取安装的版本
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 2 {
-                        return Some(parts[1].to_string());
-                    }
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        for line in output_str.lines() {
+            if line.contains("***") {
+                // 提取安装的版本
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 2 {
+                    return Some(parts[1].to_string());
                 }
             }
         }

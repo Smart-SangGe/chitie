@@ -61,9 +61,7 @@ pub async fn check() -> Option<Finding> {
     let security = ["apparmor_parser", "seccomp", "gvisor", "kata-runtime"];
 
     // Container debugging
-    let debugging = [
-        "nsenter", "unshare", "chroot", "capsh", "setcap", "getcap",
-    ];
+    let debugging = ["nsenter", "unshare", "chroot", "capsh", "setcap", "getcap"];
 
     // 检查所有工具
     check_tools(&runtimes, "Container Runtimes", &mut found_tools);
@@ -82,8 +80,8 @@ pub async fn check() -> Option<Finding> {
         .any(|t| t.contains("docker") || t.contains("podman") || t.contains("lxc"))
     {
         finding.severity = Severity::Medium;
-        finding.description = "Container runtime tools detected - check for misconfigurations"
-            .to_string();
+        finding.description =
+            "Container runtime tools detected - check for misconfigurations".to_string();
     }
 
     finding.details.extend(found_tools);
@@ -96,12 +94,12 @@ fn check_tools(tools: &[&str], category: &str, found: &mut Vec<String>) {
     let mut category_tools = Vec::new();
 
     for tool in tools {
-        if let Ok(output) = Command::new("command").args(["-v", tool]).output() {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    category_tools.push(format!("  {} -> {}", tool, path));
-                }
+        if let Ok(output) = Command::new("command").args(["-v", tool]).output()
+            && output.status.success()
+        {
+            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !path.is_empty() {
+                category_tools.push(format!("  {} -> {}", tool, path));
             }
         }
     }

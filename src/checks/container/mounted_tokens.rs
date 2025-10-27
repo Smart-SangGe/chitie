@@ -96,9 +96,7 @@ pub async fn check() -> Option<Finding> {
                 } else {
                     finding.details.push(format!("Token: {}", token));
                 }
-                finding
-                    .details
-                    .push("=".repeat(80));
+                finding.details.push("=".repeat(80));
                 finding.details.push("".to_string());
             }
         }

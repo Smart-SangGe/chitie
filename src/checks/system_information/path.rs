@@ -47,12 +47,12 @@ pub async fn check() -> Option<Finding> {
         }
 
         // 检查是否可写
-        if let Ok(metadata) = std::fs::metadata(dir) {
-            if metadata.is_dir() {
-                // 检查目录是否可写
-                if is_writable(dir) {
-                    vulnerable_paths.push(format!("Writable directory in PATH: {}", dir));
-                }
+        if let Ok(metadata) = std::fs::metadata(dir)
+            && metadata.is_dir()
+        {
+            // 检查目录是否可写
+            if is_writable(dir) {
+                vulnerable_paths.push(format!("Writable directory in PATH: {}", dir));
             }
         }
     }

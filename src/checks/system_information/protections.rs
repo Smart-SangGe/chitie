@@ -117,10 +117,10 @@ pub async fn check() -> Option<Finding> {
     }
 
     // 检查 grsecurity
-    if let Ok(kernel) = fs::read_to_string("/proc/version") {
-        if kernel.contains("grsec") {
-            protections.push("grsecurity: present".to_string());
-        }
+    if let Ok(kernel) = fs::read_to_string("/proc/version")
+        && kernel.contains("grsec")
+    {
+        protections.push("grsecurity: present".to_string());
     }
 
     // 检查是否在虚拟机中运行
@@ -130,10 +130,7 @@ pub async fn check() -> Option<Finding> {
             if let Ok(output) = Command::new("systemd-detect-virt").output() {
                 if output.status.success() {
                     let virt_type = String::from_utf8_lossy(&output.stdout);
-                    protections.push(format!(
-                        "Virtual machine: Yes ({})",
-                        virt_type.trim()
-                    ));
+                    protections.push(format!("Virtual machine: Yes ({})", virt_type.trim()));
                 } else {
                     protections.push("Virtual machine: Yes".to_string());
                 }

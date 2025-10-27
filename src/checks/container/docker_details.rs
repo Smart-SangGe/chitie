@@ -51,7 +51,9 @@ pub async fn check() -> Option<Finding> {
             .push("WARNING: User is in docker group!".to_string());
         finding.severity = Severity::High;
     } else {
-        finding.details.push("User is NOT in docker group".to_string());
+        finding
+            .details
+            .push("User is NOT in docker group".to_string());
     }
 
     // 枚举 Docker socket
@@ -86,7 +88,9 @@ pub async fn check() -> Option<Finding> {
         finding.details.push("Rootless Docker: Yes".to_string());
     } else {
         finding.details.push("".to_string());
-        finding.details.push("Rootless Docker: No (WARNING)".to_string());
+        finding
+            .details
+            .push("Rootless Docker: No (WARNING)".to_string());
     }
 
     // 检查 Docker overlays
@@ -152,11 +156,7 @@ fn enumerate_docker_sockets() -> Vec<String> {
         if let Ok(metadata) = fs::metadata(path) {
             let perms = metadata.permissions();
             let mode = perms.mode();
-            sockets.push(format!(
-                "  {} (permissions: {:o})",
-                path,
-                mode & 0o777
-            ));
+            sockets.push(format!("  {} (permissions: {:o})", path, mode & 0o777));
 
             // 检查是否可写
             if mode & 0o002 != 0 || mode & 0o020 != 0 {

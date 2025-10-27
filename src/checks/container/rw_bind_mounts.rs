@@ -79,7 +79,9 @@ pub async fn check() -> Option<Finding> {
     }
 
     if dangerous_mounts.is_empty() {
-        finding.details.push("No writable bind mounts without nosuid found".to_string());
+        finding
+            .details
+            .push("No writable bind mounts without nosuid found".to_string());
         return Some(finding);
     }
 
@@ -87,7 +89,9 @@ pub async fn check() -> Option<Finding> {
     finding.severity = Severity::Critical;
     finding.description = "CRITICAL: Writable bind mounts without nosuid detected!".to_string();
 
-    finding.details.push("WARNING: Found writable bind mounts without nosuid option:".to_string());
+    finding
+        .details
+        .push("WARNING: Found writable bind mounts without nosuid option:".to_string());
     finding.details.push("".to_string());
 
     for mount in &dangerous_mounts {
@@ -109,15 +113,30 @@ pub async fn check() -> Option<Finding> {
     };
 
     if is_root {
-        finding.details.push("CRITICAL: You are root inside the container!".to_string());
+        finding
+            .details
+            .push("CRITICAL: You are root inside the container!".to_string());
         finding.details.push("Attack vector:".to_string());
-        finding.details.push("  1. Copy a SUID shell to the writable bind mount:".to_string());
-        finding.details.push("     cp /bin/bash /mounted/path/escalate".to_string());
-        finding.details.push("     chmod 6777 /mounted/path/escalate".to_string());
-        finding.details.push("  2. Execute from the host to get root access".to_string());
+        finding
+            .details
+            .push("  1. Copy a SUID shell to the writable bind mount:".to_string());
+        finding
+            .details
+            .push("     cp /bin/bash /mounted/path/escalate".to_string());
+        finding
+            .details
+            .push("     chmod 6777 /mounted/path/escalate".to_string());
+        finding
+            .details
+            .push("  2. Execute from the host to get root access".to_string());
     } else {
-        finding.details.push("NOTE: Current user is not root in container".to_string());
-        finding.details.push("If you obtain container root, these mounts enable host escalation via SUID planting".to_string());
+        finding
+            .details
+            .push("NOTE: Current user is not root in container".to_string());
+        finding.details.push(
+            "If you obtain container root, these mounts enable host escalation via SUID planting"
+                .to_string(),
+        );
     }
 
     Some(finding)

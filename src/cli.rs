@@ -34,8 +34,15 @@ pub struct Cli {
     #[arg(short = 'f', long)]
     pub firmware: Option<String>,
 
+    /// 只执行选定的检查模块（逗号分隔）
+    /// 可选: system_information,container,cloud,procs_crons_timers_srvcs_sockets,
+    ///      network_information,users_information,software_information,
+    ///      interesting_perms_files,interesting_files,api_keys_regex
+    #[arg(short = 'o', long)]
+    pub only_modules: Option<String>,
+
     /// 输出格式 (terminal, json, xml, html)
-    #[arg(short = 'o', long, default_value = "terminal")]
+    #[arg(long, default_value = "terminal")]
     pub output_format: String,
 
     /// 输出文件路径
@@ -61,6 +68,7 @@ impl Cli {
             password: self.password,
             debug: self.debug,
             firmware: self.firmware,
+            only_modules: self.only_modules,
             output_format,
             output_file: self.output_file,
             root_folder: self.root_folder,

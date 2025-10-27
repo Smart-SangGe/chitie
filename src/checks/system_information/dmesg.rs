@@ -56,9 +56,7 @@ pub async fn check() -> Option<Finding> {
     for line in &signature_lines {
         if line.to_lowercase().contains("failed") || line.to_lowercase().contains("error") {
             has_failures = true;
-            finding
-                .details
-                .push(format!("WARNING: {}", line.trim()));
+            finding.details.push(format!("WARNING: {}", line.trim()));
         } else {
             finding.details.push(line.trim().to_string());
         }
