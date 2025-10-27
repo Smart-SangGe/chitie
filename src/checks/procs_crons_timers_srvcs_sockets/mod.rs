@@ -1,15 +1,13 @@
-pub mod sh_files_in_path;
-pub mod executable_files;
-pub mod modified_last_5mins;
+pub mod processes;
+pub mod cron_jobs;
 
 use crate::Finding;
 
-/// 运行所有有趣文件检查
+/// 运行所有进程/定时任务/服务检查
 pub async fn run() -> anyhow::Result<Vec<Finding>> {
     let handles = vec![
-        tokio::spawn(sh_files_in_path::check()),
-        tokio::spawn(executable_files::check()),
-        tokio::spawn(modified_last_5mins::check()),
+        tokio::spawn(processes::check()),
+        tokio::spawn(cron_jobs::check()),
     ];
 
     let mut findings = Vec::new();
