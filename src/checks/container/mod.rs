@@ -28,6 +28,5 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
             findings.push(finding);
         }
     }
-
     Ok(findings)
 }

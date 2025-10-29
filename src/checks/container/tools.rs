@@ -74,16 +74,6 @@ pub async fn check() -> Option<Finding> {
         return None;
     }
 
-    // 如果发现容器运行时，提升严重性
-    if found_tools
-        .iter()
-        .any(|t| t.contains("docker") || t.contains("podman") || t.contains("lxc"))
-    {
-        finding.severity = Severity::Medium;
-        finding.description =
-            "Container runtime tools detected - check for misconfigurations".to_string();
-    }
-
     finding.details.extend(found_tools);
 
     Some(finding)
@@ -94,7 +84,7 @@ fn check_tools(tools: &[&str], category: &str, found: &mut Vec<String>) {
     let mut category_tools = Vec::new();
 
     for tool in tools {
-        if let Ok(output) = Command::new("command").args(["-v", tool]).output()
+        if let Ok(output) = Command::new("which").args([tool]).output()
             && output.status.success()
         {
             let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
