@@ -228,7 +228,7 @@ fn check_timer_file(
 
 fn check_timer_service(
     service_name: &str,
-    timer_name: &str,
+    _timer_name: &str,
     details: &mut Vec<String>,
     finding: &mut Finding,
 ) {

@@ -38,7 +38,7 @@ pub async fn check() -> Option<Finding> {
     let mut seen_binaries = HashSet::new();
 
     // 获取当前用户
-    let current_uid = unsafe { libc::getuid() };
+    let current_uid = nix::unistd::getuid().as_raw();
 
     // 遍历所有进程
     if let Ok(entries) = fs::read_dir("/proc") {

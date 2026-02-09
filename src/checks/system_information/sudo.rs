@@ -77,6 +77,7 @@ pub async fn check() -> Option<Finding> {
 /// - 1.9.0 到 1.9.4: CVE-2021-3156 等
 /// - 1.9.5p1: 特定补丁版本
 /// - 1.9.6 到 1.9.17: 其他已知漏洞
+/// - 1.9.14 到 1.9.17: CVE-2025-32463
 fn is_vulnerable_sudo_version(version_line: &str) -> bool {
     use regex::Regex;
 

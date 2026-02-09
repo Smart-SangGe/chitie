@@ -246,9 +246,7 @@ pub async fn check() -> Option<Finding> {
     details.push("Attempting to `su` to users with common passwords...".to_string());
 
     for user in target_users {
-        let mut user_specific_passwords = Vec::new();
-        user_specific_passwords.push(""); // Empty password
-        user_specific_passwords.push(user.as_str()); // Username as password
+        let user_specific_passwords = ["", user.as_str()];
 
         let passwords_to_try = user_specific_passwords
             .iter()
@@ -265,18 +263,18 @@ pub async fn check() -> Option<Finding> {
             // Construct the command to pipe password to su
             let command_str = format!("echo '{}' | su {} -c 'whoami'", pwd, user);
 
-            if let Ok(output) = Command::new("sh").arg("-c").arg(&command_str).output() {
-                if output.status.success() {
-                    let stdout = String::from_utf8_lossy(&output.stdout);
-                    if stdout.trim() == user {
-                        details.push(format!(
-                            "⚠ CRITICAL: Successfully `su`'d to user '{}' with password '{}'!",
-                            user, pwd
-                        ));
-                        finding.severity = Severity::Critical;
-                        finding.details = details;
-                        return Some(finding);
-                    }
+            if let Ok(output) = Command::new("sh").arg("-c").arg(&command_str).output()
+                && output.status.success()
+            {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                if stdout.trim() == user {
+                    details.push(format!(
+                        "⚠ CRITICAL: Successfully `su`'d to user '{}' with password '{}'!",
+                        user, pwd
+                    ));
+                    finding.severity = Severity::Critical;
+                    finding.details = details;
+                    return Some(finding);
                 }
             }
         }

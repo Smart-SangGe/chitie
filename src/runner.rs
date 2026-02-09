@@ -13,9 +13,8 @@ pub async fn run_all_checks() -> anyhow::Result<Vec<Finding>> {
         vec![] // 空表示运行所有模块
     };
 
-    let should_run = |module: &str| -> bool {
-        enabled_modules.is_empty() || enabled_modules.contains(&module)
-    };
+    let should_run =
+        |module: &str| -> bool { enabled_modules.is_empty() || enabled_modules.contains(&module) };
 
     // 创建检查任务
     let mut tasks = vec![];
@@ -52,13 +51,13 @@ pub async fn run_all_checks() -> anyhow::Result<Vec<Finding>> {
         tasks.push(tokio::spawn(checks::interesting_files::run()));
     }
 
-    // TODO: 其他模块
-    // if should_run("procs_crons_timers_srvcs_sockets") {
-    //     tasks.push(tokio::spawn(checks::procs_crons_timers_srvcs::run()));
-    // }
-    // if should_run("api_keys_regex") {
-    //     tasks.push(tokio::spawn(checks::api_keys_regex::run()));
-    // }
+    if should_run("procs_crons_timers_srvcs_sockets") {
+        tasks.push(tokio::spawn(checks::procs_crons_timers_srvcs_sockets::run()));
+    }
+
+    if should_run("api_keys_regex") {
+        tasks.push(tokio::spawn(checks::api_key_regex::run()));
+    }
 
     // 收集所有结果
     let mut all_findings = Vec::new();

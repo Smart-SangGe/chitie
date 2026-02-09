@@ -37,7 +37,8 @@ pub async fn check() -> Option<Finding> {
     );
 
     let mut details = Vec::new();
-    let current_uid = unsafe { libc::getuid() };
+    // 获取当前用户
+    let current_uid = nix::unistd::getuid().as_raw();
 
     // 如果是root用户，跳过此检查
     if current_uid == 0 {
@@ -220,7 +221,7 @@ fn analyze_socket(socket_path: &str) -> Option<SocketInfo> {
 
     // 检查读写权限
     let readable = path.metadata().map(|m| m.permissions()).ok()
-        .map(|p| {
+        .map(|_p| {
             // 简单检查：尝试打开文件
             fs::File::open(path).is_ok()
         })

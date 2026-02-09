@@ -1,7 +1,6 @@
 use crate::{Category, Finding, Severity};
 use regex::Regex;
 use std::fs;
-use walkdir::WalkDir;
 
 ///  Processes - Socket Files
 ///  Author: Sangge
@@ -36,7 +35,7 @@ pub async fn check() -> Option<Finding> {
     );
 
     let mut details = Vec::new();
-    let current_uid = unsafe { libc::getuid() };
+    let current_uid = nix::unistd::getuid().as_raw();
 
     // 如果是root用户，跳过此检查
     if current_uid == 0 {

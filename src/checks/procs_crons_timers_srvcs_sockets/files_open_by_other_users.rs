@@ -50,8 +50,8 @@ pub async fn check() -> Option<Finding> {
         }
     }
 
-    // 获取当前用户UID
-    let current_uid = unsafe { libc::getuid() };
+    // 获取当前用户
+    let current_uid = nix::unistd::getuid().as_raw();
 
     // 检查是否为root
     if current_uid == 0 {

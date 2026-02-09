@@ -182,8 +182,8 @@ fn check_service_file(
         use std::os::unix::fs::PermissionsExt;
         let mode = metadata.permissions().mode();
 
-        // 检查是否可写（非root用户）
-        let current_uid = unsafe { libc::getuid() };
+        // 获取当前用户
+        let current_uid = nix::unistd::getuid().as_raw();
         if current_uid != 0 && (mode & 0o022 != 0) {
             details.push(format!(
                 "  ⚠ WRITABLE service file: {} (mode: {:o})",
