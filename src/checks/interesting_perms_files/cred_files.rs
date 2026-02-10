@@ -100,6 +100,37 @@ pub async fn check() -> Option<Finding> {
         }
     }
 
+    // 7. Writable network-scripts
+    let net_scripts = "/etc/sysconfig/network-scripts/";
+    if Path::new(net_scripts).exists() {
+        let mut writable_net = Vec::new();
+        if let Ok(metadata) = fs::metadata(net_scripts) {
+            if is_writable(&metadata) {
+                writable_net.push(net_scripts.to_string());
+            }
+        }
+        
+        // Also check files inside
+        if let Ok(entries) = fs::read_dir(net_scripts) {
+            for entry in entries.filter_map(|e| e.ok()) {
+                if let Ok(m) = entry.metadata() {
+                    if is_writable(&m) {
+                        writable_net.push(entry.path().display().to_string());
+                    }
+                }
+            }
+        }
+
+        if !writable_net.is_empty() {
+            details.push("CRITICAL: You have write privileges over network-scripts:".to_string());
+            for p in writable_net.iter().take(5) {
+                details.push(format!("  - {}", p));
+            }
+            high_severity = true;
+            finding.severity = Severity::Critical;
+        }
+    }
+
     if high_severity && finding.severity < Severity::High {
         finding.severity = Severity::High;
     }
@@ -112,13 +143,34 @@ pub async fn check() -> Option<Finding> {
     Some(finding)
 }
 
+use std::path::Path;
+use std::os::unix::fs::MetadataExt;
+use nix::unistd::{getgroups, getuid};
+
 fn is_writable(metadata: &fs::Metadata) -> bool {
     let mode = metadata.permissions().mode();
+    let current_uid = getuid().as_raw();
+    
+    // World writable
     if mode & 0o002 != 0 {
         return true;
     }
-    if mode & 0o020 != 0 {
+    
+    // Owned by user
+    if metadata.uid() == current_uid && (mode & 0o200 != 0) {
         return true;
     }
+
+    // Group writable
+    let current_groups: std::collections::HashSet<u32> = getgroups()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|g| g.as_raw())
+        .collect();
+    
+    if current_groups.contains(&metadata.gid()) && (mode & 0o020 != 0) {
+        return true;
+    }
+
     false
 }
