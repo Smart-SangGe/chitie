@@ -1,5 +1,6 @@
 pub mod backup_files;
 pub mod database_files;
+pub mod environment_variables;
 pub mod executable_files;
 pub mod hidden_files;
 pub mod history_files;
@@ -9,7 +10,11 @@ pub mod modified_last_5mins;
 pub mod others_homes;
 pub mod sensitive_files;
 pub mod sh_files_in_path;
+pub mod tmp_files;
+pub mod tty_passwords;
+pub mod unexpected_files;
 pub mod web_files;
+pub mod writable_log_files;
 
 use crate::Finding;
 
@@ -27,6 +32,11 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
         tokio::spawn(mail_files::check()),
         tokio::spawn(web_files::check()),
         tokio::spawn(others_homes::check()),
+        tokio::spawn(environment_variables::check()),
+        tokio::spawn(writable_log_files::check()),
+        tokio::spawn(unexpected_files::check()),
+        tokio::spawn(tmp_files::check()),
+        tokio::spawn(tty_passwords::check()),
     ];
 
     let mut findings = Vec::new();
