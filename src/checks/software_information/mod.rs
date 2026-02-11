@@ -1,9 +1,10 @@
-pub mod useful_software;
 pub mod compilers;
-pub mod terminal_sessions;
-pub mod ssh_info;
 pub mod mysql;
 pub mod postgresql;
+pub mod ssh_info;
+pub mod terminal_sessions;
+pub mod useful_software;
+pub mod web_servers;
 
 use crate::Finding;
 
@@ -16,6 +17,7 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
         tokio::spawn(ssh_info::check()),
         tokio::spawn(mysql::check()),
         tokio::spawn(postgresql::check()),
+        tokio::spawn(web_servers::check()),
     ];
 
     let mut findings = Vec::new();

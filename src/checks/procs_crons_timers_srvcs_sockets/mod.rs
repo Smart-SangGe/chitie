@@ -9,6 +9,8 @@ pub mod systemd_info;
 pub mod socket_files;
 pub mod unix_sockets;
 pub mod rcommands_trust;
+pub mod dbus_analysis;
+pub mod process_creds;
 
 use crate::Finding;
 
@@ -26,6 +28,8 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
         tokio::spawn(socket_files::check()),
         tokio::spawn(unix_sockets::check()),
         tokio::spawn(rcommands_trust::check()),
+        tokio::spawn(dbus_analysis::check()),
+        tokio::spawn(process_creds::check()),
     ];
 
     let mut findings = Vec::new();
