@@ -6,6 +6,7 @@ mod disks;
 mod disks_extra;
 mod dmesg;
 mod environment;
+mod exploit_suggester;
 mod kernel_modules;
 mod mounts;
 mod os;
@@ -28,6 +29,7 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
         tokio::spawn(disks::check()),
         tokio::spawn(environment::check()),
         tokio::spawn(kernel_modules::check()),
+        tokio::spawn(exploit_suggester::check()),
     ];
 
     if config.extra || config.all_checks {
