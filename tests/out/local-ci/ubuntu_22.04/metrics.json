@@ -1,0 +1,64 @@
+{
+  "chitie_file": "/home/sangge/code/chitie/tests/out/local-ci/ubuntu_22.04/chitie.txt",
+  "linpeas_file": "/home/sangge/code/chitie/tests/out/local-ci/ubuntu_22.04/linpeas.txt",
+  "signals": {
+    "chitie": 582,
+    "linpeas": 744
+  },
+  "metrics": {
+    "tp": 39,
+    "fp": 543,
+    "fn": 705,
+    "precision": 0.06701030927835051,
+    "recall": 0.05241935483870968,
+    "sample_tp": [
+      "/root home",
+      "/var/log/bootstrap.log: base-passwd depends however: libc6",
+      "/var/log/bootstrap.log: base-passwd depends however: libdebconfclient0",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 configure date time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date half-configured status time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date half-installed status time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date install none time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date installed status time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date status time unpacked",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date time upgrade"
+    ],
+    "sample_fp": [
+      "--decode audit. capabilities capsh detected excessive high: run",
+      "--reinstall /var/log/apt/history.log: apt-get base-passwd commandline: install",
+      "-f4 /etc/security/namespace.init: cut echo gid passwd",
+      "-f6 /etc/security/namespace.init: cut echo homedir passwd",
+      "-lc /usr/local/bin/chitie root",
+      ".../base-passwd_3.5.52build1_amd64.deb /var/log/bootstrap.log: preparing unpack",
+      "/bin directory path: writable",
+      "/bin/chage mode:",
+      "/bin/chfn mode:",
+      "/bin/chsh dangerous: mode:"
+    ],
+    "sample_fn": [
+      "--decode capabilities capsh decode hex run",
+      "--reinstall /var/log/apt/history.log:commandline: apt-get base-passwd install",
+      "--reinstall /var/log/apt/history.log:commandline: apt-get install passwd",
+      "-rw------- /etc/.pwd.lock feb root",
+      "-rw-r--r-- .bashrc oct root",
+      "-rw-r--r-- .profile jul root",
+      "-rw-r--r-- /etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg mar root",
+      "-rw-r--r-- /etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg mar root",
+      "-rw-r--r-- /etc/environment feb root",
+      "-rw-r--r-- /etc/pam.d/chfn nov root"
+    ]
+  },
+  "thresholds": {
+    "min_precision": 0.95,
+    "min_recall": 0.98
+  },
+  "required_patterns": [
+    "suid",
+    "/etc/passwd",
+    "cron",
+    "secret_token",
+    "db_pass",
+    "cap_setuid"
+  ],
+  "missing_required_patterns": []
+}

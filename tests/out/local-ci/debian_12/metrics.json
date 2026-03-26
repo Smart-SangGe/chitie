@@ -1,0 +1,28 @@
+{
+  "chitie_file": "/home/sangge/code/chitie/tests/out/local-ci/debian_12/chitie.txt",
+  "linpeas_file": "/home/sangge/code/chitie/tests/out/local-ci/debian_12/linpeas.txt",
+  "signals": {
+    "chitie": 542,
+    "linpeas": 719
+  },
+  "metrics": {
+    "tp": 28,
+    "fp": 514,
+    "fn": 691,
+    "precision": 0.05166051660516605,
+    "recall": 0.03894297635605007
+  },
+  "thresholds": {
+    "min_precision": 0.95,
+    "min_recall": 0.98
+  },
+  "required_patterns": [
+    "suid",
+    "/etc/passwd",
+    "cron",
+    "secret_token",
+    "db_pass",
+    "cap_setuid"
+  ],
+  "missing_required_patterns": []
+}

@@ -1,0 +1,64 @@
+{
+  "chitie_file": "/home/sangge/code/chitie/tests/out/local-ci/chitie-vuln-env_local/chitie.txt",
+  "linpeas_file": "/home/sangge/code/chitie/tests/out/local-ci/chitie-vuln-env_local/linpeas.txt",
+  "signals": {
+    "chitie": 610,
+    "linpeas": 801
+  },
+  "metrics": {
+    "tp": 41,
+    "fp": 569,
+    "fn": 760,
+    "precision": 0.06721311475409836,
+    "recall": 0.05118601747815231,
+    "sample_tp": [
+      "/bin/sh shell",
+      "/home/testuser home",
+      "/home/testuser pwd",
+      "/opt empty unexpected usually",
+      "/var/log/bootstrap.log: base-passwd depends however: libc6",
+      "/var/log/bootstrap.log: base-passwd depends however: libdebconfclient0",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 configure date time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date half-configured status time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date half-installed status time",
+      "/var/log/dpkg.log: 3.5.52build1 base-passwd:amd64 date install none time"
+    ],
+    "sample_fp": [
+      "--report /etc/cron.daily /usr/sbin/anacron root run-parts test wildcard:",
+      "--report /etc/cron.hourly root run-parts wildcard:",
+      "--report /etc/cron.monthly /usr/sbin/anacron root run-parts test wildcard:",
+      "--report /etc/cron.weekly /usr/sbin/anacron root run-parts test wildcard:",
+      "-f4 /etc/security/namespace.init: cut echo gid passwd",
+      "-f6 /etc/security/namespace.init: cut echo homedir passwd",
+      "-lc /usr/local/bin/chitie",
+      ".../base-passwd_3.5.52build1_amd64.deb /var/log/bootstrap.log: preparing unpack",
+      "/bin directory path: writable",
+      "/bin/chage mode:"
+    ],
+    "sample_fn": [
+      "--reinstall /var/log/apt/history.log:commandline: apt-get base-passwd install",
+      "--reinstall /var/log/apt/history.log:commandline: apt-get install passwd",
+      "--report /etc/cron.daily /usr/sbin/anacron root run-parts test",
+      "--report /etc/cron.hourly root run-parts",
+      "--report /etc/cron.monthly /usr/sbin/anacron root run-parts test",
+      "--report /etc/cron.weekly /usr/sbin/anacron root run-parts test",
+      "-rw------- /etc/.pwd.lock feb root",
+      "-rw------- /home/testuser/.ssh/id_rsa mar testuser",
+      "-rw------- /var/run/sudo/ts/testuser mar root testuser",
+      "-rw-r----- /var/log/apt/term.log adm mar root"
+    ]
+  },
+  "thresholds": {
+    "min_precision": 0.95,
+    "min_recall": 0.98
+  },
+  "required_patterns": [
+    "suid",
+    "/etc/passwd",
+    "cron",
+    "secret_token",
+    "db_pass",
+    "cap_setuid"
+  ],
+  "missing_required_patterns": []
+}

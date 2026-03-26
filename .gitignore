@@ -25,3 +25,11 @@ linPEAS
 CLAUDE.md
 amicontained/
 GEMINI.md
+tests/out/local-ci/debian_12/chitie.time
+tests/out/local-ci/debian_12/chitie.txt
+tests/out/local-ci/debian_12/linpeas.time
+tests/out/local-ci/debian_12/linpeas.txt
+tests/out/local-ci/ubuntu_22.04/chitie.time
+tests/out/local-ci/ubuntu_22.04/chitie.txt
+tests/out/local-ci/ubuntu_22.04/linpeas.time
+tests/out/local-ci/ubuntu_22.04/linpeas.txt

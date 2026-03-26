@@ -15,10 +15,12 @@ mod su_bruteforce;
 mod users_with_console;
 
 use crate::Finding;
+use crate::config::config;
 
 /// 运行用户信息检查
 pub async fn run() -> anyhow::Result<Vec<Finding>> {
-    let handles = vec![
+    let cfg = config();
+    let mut handles = vec![
         tokio::spawn(my_user::check()),
         tokio::spawn(sudo_permissions::check()),
         tokio::spawn(pgp_keys::check()),
@@ -32,8 +34,12 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
         tokio::spawn(logged_in_users::check()),
         tokio::spawn(last_logons::check()),
         tokio::spawn(password_policy::check()),
-        tokio::spawn(su_bruteforce::check()),
     ];
+
+    // Keep dangerous and very slow checks aligned with -a behavior.
+    if cfg.all_checks {
+        handles.push(tokio::spawn(su_bruteforce::check()));
+    }
 
     let mut findings = Vec::new();
     for handle in handles {

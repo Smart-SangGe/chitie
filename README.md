@@ -79,3 +79,57 @@ CLI参数 → Config → Runner → 并发执行各模块 → Finding[] → Outp
 - **静态链接**: musl（零依赖部署）
 
 ## 性能对比
+
+## 本地一致性验证（容器矩阵）
+
+新增 `tests/local_ci.sh`，用于在本机按容器矩阵对比 `chitie` 与 `linpeas.sh` 输出一致性，并给出量化指标（TP/FP/FN、precision、recall）。
+
+### 依赖
+
+- `podman`（优先）或 `docker`
+- 本机可访问的 `linpeas.sh`（默认 `/usr/share/peass/linpeas/linpeas.sh`）
+- `python3`
+
+### 一键执行
+
+```bash
+bash tests/local_ci.sh
+```
+
+默认会读取 `tests/local_ci.config`，你可以把它当“配置单”来改检测范围、镜像矩阵和阈值。
+
+### 常用参数（环境变量）
+
+```bash
+# 指定 linpeas 路径
+LINPEAS_SH=/path/to/linpeas.sh bash tests/local_ci.sh
+
+# 自定义镜像矩阵，不构建漏洞环境镜像
+MATRIX_IMAGES="ubuntu:22.04,debian:12" RUN_VULN_ENV=0 bash tests/local_ci.sh
+
+# 调整门限
+MIN_PRECISION=0.93 MIN_RECALL=0.97 bash tests/local_ci.sh
+
+# 临时关闭代理隔离（默认是隔离）
+CONTAINER_DISABLE_PROXY=0 bash tests/local_ci.sh
+
+# 并行跑多个场景（例如 3 个镜像并发）
+SCENARIO_JOBS=3 bash tests/local_ci.sh
+
+# 若基础镜像缺少 ps，自动构建派生镜像补 procps（默认开启）
+AUTO_INSTALL_PROCPS=1 bash tests/local_ci.sh
+```
+
+输出工件默认在 `tests/out/local-ci/`。
+
+### 配置单（tests/local_ci.config）
+
+可在配置单里改这些核心项：
+
+- `CONTAINER_DISABLE_PROXY`：是否禁止把宿主机代理带进容器（默认 `1`）
+- `SCENARIO_JOBS`：场景并发数（默认 `1`，可设为 `2/3/...`）
+- `AUTO_INSTALL_PROCPS`：镜像缺少 `ps` 时自动补装 `procps`（默认 `1`）
+- `MATRIX_IMAGES` / `RUN_VULN_ENV`：测试镜像矩阵
+- `CHITIE_ONLY_MODULES`：仅跑指定模块（映射 `chitie -o`）
+- `CHITIE_ARGS` / `LINPEAS_ARGS`：附加运行参数
+- `MIN_PRECISION` / `MIN_RECALL` / `REQUIRED_PATTERNS`：比较门限与关键项
