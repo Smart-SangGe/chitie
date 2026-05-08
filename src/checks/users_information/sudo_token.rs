@@ -1,8 +1,8 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use std::env;
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 
 ///  User Information - Sudo Token Status
 ///  Author: Sangge

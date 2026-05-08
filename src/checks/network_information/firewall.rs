@@ -1,6 +1,6 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use std::fs;
-use std::process::Command;
 
 ///  Network Information - Firewall Rules
 ///  Author: Sangge

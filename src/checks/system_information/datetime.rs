@@ -1,3 +1,4 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use std::fs;
 
@@ -28,7 +29,7 @@ pub async fn check() -> Option<Finding> {
     );
 
     // 读取当前时间
-    if let Ok(output) = std::process::Command::new("date").output()
+    if let Ok(output) = Command::new("date").output()
         && output.status.success()
     {
         let date_str = String::from_utf8_lossy(&output.stdout);

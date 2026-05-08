@@ -1,9 +1,9 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use std::env;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
-use std::process::Command;
 
 ///  User Information - Doas Configuration
 ///  Author: Sangge

@@ -1,8 +1,8 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use regex::Regex;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use std::process::Command;
 
 ///  Container - Docker Container Details
 ///  Author: Sangge

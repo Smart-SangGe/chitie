@@ -1,5 +1,5 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
-use std::process::Command;
 
 ///  Software Information - Useful Software
 ///  Author: Sangge

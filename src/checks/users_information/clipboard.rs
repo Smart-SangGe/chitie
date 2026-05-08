@@ -1,7 +1,7 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use regex::Regex;
 use std::env;
-use std::process::Command;
 
 ///  User Information - Clipboard and Highlighted Text
 ///  Author: Sangge

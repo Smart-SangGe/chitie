@@ -1,8 +1,8 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use nix::unistd::getuid;
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::path::Path;
-use std::process::Command;
 use walkdir::WalkDir;
 
 ///  Software Information - Terminal Sessions (Screen/Tmux)

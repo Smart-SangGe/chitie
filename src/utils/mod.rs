@@ -1,3 +1,5 @@
+pub mod command;
+
 // Utils模块将在后续实现
 // pub mod fs;
 // pub mod proc;

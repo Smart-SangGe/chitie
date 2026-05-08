@@ -52,6 +52,14 @@ pub struct Cli {
     /// 根目录（用于容器/chroot环境）
     #[arg(long, default_value = "/")]
     pub root_folder: String,
+
+    /// 禁用所有外部命令调用，仅使用Rust/procfs/sysfs实现的检查
+    #[arg(long)]
+    pub no_external_commands: bool,
+
+    /// 外部命令超时时间（秒）
+    #[arg(long, default_value_t = 3)]
+    pub command_timeout_secs: u64,
 }
 
 impl Cli {
@@ -74,6 +82,8 @@ impl Cli {
             output_format,
             output_file: self.output_file,
             root_folder: self.root_folder,
+            external_commands: !self.no_external_commands,
+            command_timeout_secs: self.command_timeout_secs,
         })
     }
 }

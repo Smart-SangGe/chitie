@@ -39,6 +39,12 @@ pub struct Config {
 
     /// 根目录（用于容器/chroot环境）
     pub root_folder: String,
+
+    /// 是否允许调用外部命令
+    pub external_commands: bool,
+
+    /// 外部命令默认超时时间（秒）
+    pub command_timeout_secs: u64,
 }
 
 impl Default for Config {
@@ -55,6 +61,8 @@ impl Default for Config {
             output_format: OutputFormat::Terminal,
             output_file: None,
             root_folder: "/".to_string(),
+            external_commands: true,
+            command_timeout_secs: 3,
         }
     }
 }

@@ -1,7 +1,7 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use std::env;
 use std::path::Path;
-use std::process::Command;
 
 ///  User Information - PGP Keys
 ///  Author: Sangge

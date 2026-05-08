@@ -1,8 +1,8 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use std::fs;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
-use std::process::Command;
 use walkdir::WalkDir;
 
 ///  Processes - Unix Sockets

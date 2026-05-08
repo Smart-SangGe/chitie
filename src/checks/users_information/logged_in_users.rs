@@ -1,5 +1,5 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
-use std::process::Command;
 
 ///  User Information - Currently Logged-In Users
 ///  Author: Sangge

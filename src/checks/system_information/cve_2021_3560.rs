@@ -1,5 +1,5 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
-use std::process::Command;
 
 ///  System Information - CVE-2021-3560
 ///  Author: Sangge

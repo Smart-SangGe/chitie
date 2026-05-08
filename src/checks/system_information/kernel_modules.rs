@@ -1,7 +1,7 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use std::process::Command;
 use walkdir::WalkDir;
 
 ///  System Information - Kernel Modules

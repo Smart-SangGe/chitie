@@ -1,7 +1,7 @@
+use crate::utils::command::Command;
 use crate::{Category, Finding, Severity};
 use grep::regex::RegexMatcher;
 use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
-use std::process::Command;
 use std::sync::{Arc, Mutex};
 use walkdir::WalkDir;
 
