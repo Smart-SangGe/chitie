@@ -17,7 +17,7 @@ pub async fn check() -> Option<Finding> {
     );
 
     let mut env_vars = HashSet::new();
-    
+
     // Patterns from LinPEAS
     let no_env_vars_re = Regex::new(r"(?i)LESS_TERMCAP|JOURNAL_STREAM|XDG_SESSION|DBUS_SESSION|systemd/sessions|systemd_exec|MEMORY_PRESSURE_WATCH|RELEVANT*|FIND*|^VERSION=|dbuslistG|mygroups|ldsoconfdG|pwd_inside_history|^sudovB=|^rootcommon=|^mounted=|^mountG=|^notmounted=|^mountpermsB=|^mountpermsG=|^kernelB=|^C=|^RED=|^GREEN=|^Y=|^B=|^NC=|TIMEOUT=|groupsB=|groupsVB=|knw_grps=|sidG|sidB=|sidVB=|sidVB2=|sudoB=|sudoG=|sudoVB=|timersG=|capsB=|notExtensions=|Wfolders=|writeB=|writeVB=|_usrs=|compiler=|LS_COLORS=|pathshG=|notBackup=|processesDump|processesB|commonrootdirs|USEFUL_SOFTWARE|PSTORAGE_|^PATH=|^INVOCATION_ID=|^WATCHDOG_PID=|^LISTEN_PID=").unwrap();
     let env_vars_red_re = Regex::new(r"(?i)[pP][aA][sS][sS][wW]|[aA][pP][iI][kK][eE][yY]|[aA][pP][iI][_][kK][eE][yY]|KRB5CCNAME|[aA][pP][iI]|[sS][eE][cC][rR][eE][tT]|[sS][qQ][lL]|[dD][aA][tT][aA][bB][aA][sS][eE]|[tT][oO][kK][eE][nN]").unwrap();

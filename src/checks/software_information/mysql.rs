@@ -1,7 +1,7 @@
 use crate::{Category, Finding, Severity};
 use std::fs;
-use std::process::Command;
 use std::path::Path;
+use std::process::Command;
 use walkdir::WalkDir;
 
 ///  Software Information - MySQL
@@ -21,7 +21,7 @@ pub async fn check() -> Option<Finding> {
 
     // 1. Check for MySQL process and version
     let mut mysql_running_as_root = false;
-    
+
     if let Ok(output) = Command::new("ps").arg("aux").output() {
         let stdout = String::from_utf8_lossy(&output.stdout);
         for line in stdout.lines() {
@@ -44,11 +44,18 @@ pub async fn check() -> Option<Finding> {
         if mysql_version.is_empty() {
             mysql_version = String::from_utf8_lossy(&output.stderr).to_string();
         }
-        details.push(format!("MySQL version: {}", mysql_version.lines().next().unwrap_or("unknown")));
-        
+        details.push(format!(
+            "MySQL version: {}",
+            mysql_version.lines().next().unwrap_or("unknown")
+        ));
+
         // Vuln check: root + version 4.x or 5.x
-        if mysql_running_as_root && (mysql_version.contains(" 4.") || mysql_version.contains(" 5.")) {
-            details.push("[!] CRITICAL: MySQL is running as root with version 4/5 (Potential UDF Exploit)".to_string());
+        if mysql_running_as_root && (mysql_version.contains(" 4.") || mysql_version.contains(" 5."))
+        {
+            details.push(
+                "[!] CRITICAL: MySQL is running as root with version 4/5 (Potential UDF Exploit)"
+                    .to_string(),
+            );
             finding.severity = Severity::Critical;
         }
     }
@@ -56,7 +63,9 @@ pub async fn check() -> Option<Finding> {
     // 2. Config files
     let config_dirs = vec!["/etc/mysql", "/etc", "/var/lib/mysql", "/usr/local/mysql"];
     for dir in config_dirs {
-        if !Path::new(dir).exists() { continue; }
+        if !Path::new(dir).exists() {
+            continue;
+        }
         for entry in WalkDir::new(dir)
             .max_depth(3)
             .follow_links(false)
@@ -65,16 +74,23 @@ pub async fn check() -> Option<Finding> {
         {
             let path = entry.path();
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-            
+
             if name == "debian.cnf" || name == "my.cnf" {
                 let is_readable = nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
                 if is_readable {
-                    details.push(format!("[!] SENSITIVE: Readable MySQL config: {}", path.display()));
+                    details.push(format!(
+                        "[!] SENSITIVE: Readable MySQL config: {}",
+                        path.display()
+                    ));
                     if finding.severity < Severity::High {
                         finding.severity = Severity::High;
                     }
                     if let Ok(content) = fs::read_to_string(path) {
-                        for line in content.lines().filter(|l| l.contains("user") || l.contains("password")).take(5) {
+                        for line in content
+                            .lines()
+                            .filter(|l| l.contains("user") || l.contains("password"))
+                            .take(5)
+                        {
                             details.push(format!("    {}", line.trim()));
                         }
                     }
@@ -87,17 +103,16 @@ pub async fn check() -> Option<Finding> {
     let user_myd = "/var/lib/mysql/mysql/user.MYD";
     if Path::new(user_myd).exists() {
         if nix::unistd::access(user_myd, nix::unistd::AccessFlags::R_OK).is_ok() {
-            details.push(format!("[!] CRITICAL: MySQL user.MYD (hashes) is readable: {}", user_myd));
+            details.push(format!(
+                "[!] CRITICAL: MySQL user.MYD (hashes) is readable: {}",
+                user_myd
+            ));
             finding.severity = Severity::Critical;
         }
     }
 
     // 4. Weak password login attempts
-    let auth_tests = vec![
-        ("root", "root"),
-        ("root", "toor"),
-        ("root", ""),
-    ];
+    let auth_tests = vec![("root", "root"), ("root", "toor"), ("root", "")];
 
     for (user, pass) in auth_tests {
         let mut cmd = Command::new("mysql");
@@ -109,18 +124,26 @@ pub async fn check() -> Option<Finding> {
 
         if let Ok(output) = cmd.output() {
             if output.status.success() {
-                details.push(format!("[!] CRITICAL: Successful MySQL login as {} with password '{}'!", user, if pass.is_empty() { "NOPASS" } else { pass }));
+                details.push(format!(
+                    "[!] CRITICAL: Successful MySQL login as {} with password '{}'!",
+                    user,
+                    if pass.is_empty() { "NOPASS" } else { pass }
+                ));
                 finding.severity = Severity::Critical;
-                
+
                 // Try to list users
                 let mut list_cmd = Command::new("mysql");
                 list_cmd.arg("-u").arg(user);
-                if !pass.is_empty() { list_cmd.arg(format!("-p{}", pass)); }
-                list_cmd.arg("-e").arg("SELECT User,Host,authentication_string FROM mysql.user;");
+                if !pass.is_empty() {
+                    list_cmd.arg(format!("-p{}", pass));
+                }
+                list_cmd
+                    .arg("-e")
+                    .arg("SELECT User,Host,authentication_string FROM mysql.user;");
                 if let Ok(out) = list_cmd.output() {
                     details.push(String::from_utf8_lossy(&out.stdout).to_string());
                 }
-                break; 
+                break;
             }
         }
     }

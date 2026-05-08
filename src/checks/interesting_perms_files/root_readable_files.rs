@@ -1,5 +1,5 @@
 use crate::{Category, Finding, Severity};
-use nix::unistd::{access, getuid, AccessFlags};
+use nix::unistd::{AccessFlags, access, getuid};
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use walkdir::WalkDir;
 

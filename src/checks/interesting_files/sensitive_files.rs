@@ -1,6 +1,6 @@
 use crate::{Category, Finding, Severity};
-use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use grep::regex::RegexMatcher;
+use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use ignore::WalkBuilder;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -37,7 +37,7 @@ pub async fn run() -> Option<Finding> {
         Ok(m) => m,
         Err(_) => return None,
     };
-    
+
     // Shared results collector
     let results_collector = Arc::new(Mutex::new(Vec::new()));
     let results_clone = results_collector.clone();
@@ -78,7 +78,7 @@ pub async fn run() -> Option<Finding> {
     builder.build_parallel().run(move || {
         let matcher = matcher.clone();
         let results = results_clone.clone();
-        
+
         Box::new(move |entry| {
             if start_time.elapsed() > timeout {
                 return ignore::WalkState::Quit;
@@ -94,7 +94,7 @@ pub async fn run() -> Option<Finding> {
             }
 
             let path = entry.path().to_owned();
-            
+
             // Limit file size to 1MB for content searching
             if let Ok(meta) = entry.metadata() {
                 if meta.len() > 1024 * 1024 {
@@ -110,9 +110,14 @@ pub async fn run() -> Option<Finding> {
 
             impl Sink for SensitiveSink {
                 type Error = std::io::Error;
-                fn matched(&mut self, _searcher: &Searcher, mat: &SinkMatch) -> Result<bool, Self::Error> {
+                fn matched(
+                    &mut self,
+                    _searcher: &Searcher,
+                    mat: &SinkMatch,
+                ) -> Result<bool, Self::Error> {
                     let line = String::from_utf8_lossy(mat.bytes()).trim().to_string();
-                    if line.len() < 200 { // Skip extremely long lines
+                    if line.len() < 200 {
+                        // Skip extremely long lines
                         let mut guard = self.results.lock().unwrap();
                         guard.push(format!("{}: {}", self.path.display(), line));
                         self.count += 1;
@@ -142,7 +147,10 @@ pub async fn run() -> Option<Finding> {
         return None;
     }
 
-    finding.details.push(format!("Found {} possible matches (showing top 100):", collected.len()));
+    finding.details.push(format!(
+        "Found {} possible matches (showing top 100):",
+        collected.len()
+    ));
     finding.details.extend(collected.iter().take(100).cloned());
 
     Some(finding)

@@ -1,8 +1,8 @@
 use crate::{Category, Finding, Severity};
 use nix::unistd::getuid;
-use std::process::Command;
-use std::os::unix::fs::{MetadataExt, FileTypeExt};
+use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::path::Path;
+use std::process::Command;
 use walkdir::WalkDir;
 
 ///  Software Information - Terminal Sessions (Screen/Tmux)
@@ -45,8 +45,12 @@ pub async fn check() -> Option<Finding> {
                     let uid = metadata.uid();
                     if uid != current_uid {
                         // Check if writable by us
-                        if nix::unistd::access(entry.path(), nix::unistd::AccessFlags::W_OK).is_ok() {
-                            details.push(format!("[!] CRITICAL: Other user screen socket is writable: {}", entry.path().display()));
+                        if nix::unistd::access(entry.path(), nix::unistd::AccessFlags::W_OK).is_ok()
+                        {
+                            details.push(format!(
+                                "[!] CRITICAL: Other user screen socket is writable: {}",
+                                entry.path().display()
+                            ));
                             finding.severity = Severity::Critical;
                         }
                     }
@@ -70,7 +74,9 @@ pub async fn check() -> Option<Finding> {
     // Check tmux sockets
     let tmux_socket_dirs = vec!["/tmp", "/run/tmux"];
     for dir in tmux_socket_dirs {
-        if !Path::new(dir).exists() { continue; }
+        if !Path::new(dir).exists() {
+            continue;
+        }
         for entry in WalkDir::new(dir)
             .max_depth(3)
             .follow_links(false)
@@ -82,8 +88,12 @@ pub async fn check() -> Option<Finding> {
                 if let Ok(metadata) = entry.metadata() {
                     let uid = metadata.uid();
                     if uid != current_uid {
-                        if nix::unistd::access(entry.path(), nix::unistd::AccessFlags::W_OK).is_ok() {
-                            details.push(format!("[!] CRITICAL: Other user tmux socket is writable: {}", entry.path().display()));
+                        if nix::unistd::access(entry.path(), nix::unistd::AccessFlags::W_OK).is_ok()
+                        {
+                            details.push(format!(
+                                "[!] CRITICAL: Other user tmux socket is writable: {}",
+                                entry.path().display()
+                            ));
                             finding.severity = Severity::Critical;
                         }
                     }

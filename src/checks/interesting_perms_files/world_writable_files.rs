@@ -27,10 +27,10 @@ pub async fn check() -> Option<Finding> {
 
     // Compile regex patterns from LinPEAS variables
     let not_extensions = Regex::new(r"(?i)\.tif$|\.tiff$|\.gif$|\.jpeg$|\.jpg|\.jif$|\.jfif$|\.jp2$|\.jpx$|\.j2k$|\.j2c$|\.fpx$|\.pcd$|\.png$|\.pdf$|\.flv$|\.mp4$|\.mp3$|\.gifv$|\.avi$|\.mov$|\.mpeg$|\.wav$|\.doc$|\.docx$|\.xls$|\.xlsx$|\.svg$").unwrap();
-    
+
     // writeVB: Very Bad (Critical)
     let write_vb = Regex::new(r"/etc/anacrontab|/etc/apt/apt.conf.d|/etc/bash.bashrc|/etc/bash_completion|/etc/bash_completion.d/|/etc/cron|/etc/environment|/etc/environment.d/|/etc/group|/etc/incron.d/|/etc/init|/etc/ld.so.conf.d/|/etc/master.passwd|/etc/passwd|/etc/profile.d/|/etc/profile|/etc/rc.d|/etc/shadow|/etc/skey/|/etc/sudoers|/etc/sudoers.d/|/etc/supervisor/conf.d/|/etc/supervisor/supervisord.conf|/etc/systemd|/etc/sys|/lib/systemd|/etc/update-motd.d/|/root/.ssh/|/run/systemd|/usr/lib/cron/tabs/|/usr/lib/systemd|/systemd/system|/var/db/yubikey/|/var/spool/anacron|/var/spool/cron/crontabs").unwrap();
-    
+
     // writeB: Bad (High)
     let write_b = Regex::new(r"00-header|10-help-text|50-motd-news|80-esm|91-release-upgrade|\.sh$|\./|/authorized_keys|/bin/|/boot/|/etc/apache2/apache2.conf|/etc/apache2/httpd.conf|/etc/hosts.allow|/etc/hosts.deny|/etc/httpd/conf/httpd.conf|/etc/httpd/httpd.conf|/etc/inetd.conf|/etc/incron.conf|/etc/login.defs|/etc/logrotate.d/|/etc/modprobe.d/|/etc/pam.d/|/etc/php.*/fpm/pool.d/|/etc/php/.*/fpm/pool.d/|/etc/rsyslog.d/|/etc/skel/|/etc/sysconfig/network-scripts/|/etc/sysctl.conf|/etc/sysctl.d/|/etc/uwsgi/apps-enabled/|/etc/xinetd.conf|/etc/xinetd.d/|/etc/|/home//|/lib/|/log/|/mnt/|/root|/sys/|/usr/bin|/usr/games|/usr/lib|/usr/local/bin|/usr/local/games|/usr/local/sbin|/usr/sbin|/sbin/|/var/log/|\.timer$|\.service$|.socket$").unwrap();
 
@@ -98,20 +98,33 @@ pub async fn check() -> Option<Finding> {
                         "world-writable"
                     };
 
-                    results.push(format!("[{}] {} {} (mode: {:o}, {})", severity_str, type_str, path_str, mode & 0o777, reason));
+                    results.push(format!(
+                        "[{}] {} {} (mode: {:o}, {})",
+                        severity_str,
+                        type_str,
+                        path_str,
+                        mode & 0o777,
+                        reason
+                    ));
                 }
             }
 
-            if results.len() >= 200 { break; }
+            if results.len() >= 200 {
+                break;
+            }
         }
-        if results.len() >= 200 { break; }
+        if results.len() >= 200 {
+            break;
+        }
     }
 
     if results.is_empty() {
         return None;
     }
 
-    finding.details.push(format!("Found {} files/dirs (max 200):", results.len()));
+    finding
+        .details
+        .push(format!("Found {} files/dirs (max 200):", results.len()));
     finding.details.extend(results);
 
     Some(finding)

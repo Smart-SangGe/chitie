@@ -1,7 +1,7 @@
 use crate::{Category, Finding, Severity};
 use std::fs;
-use std::process::Command;
 use std::path::Path;
+use std::process::Command;
 use walkdir::WalkDir;
 
 ///  Software Information - Apache and Nginx Audit
@@ -26,13 +26,16 @@ pub async fn check() -> Option<Finding> {
             let stdout = String::from_utf8_lossy(&output.stdout);
             if stdout.contains(proc) && !stdout.contains("grep") {
                 details.push(format!("Active Web server process found: {}", proc));
-                
+
                 // Try version
                 if let Ok(ver_out) = Command::new(proc).arg("-v").output() {
                     let v = String::from_utf8_lossy(&ver_out.stdout);
                     let v_err = String::from_utf8_lossy(&ver_out.stderr);
                     let full_v = if v.is_empty() { v_err } else { v };
-                    details.push(format!("  Version: {}", full_v.lines().next().unwrap_or("unknown")));
+                    details.push(format!(
+                        "  Version: {}",
+                        full_v.lines().next().unwrap_or("unknown")
+                    ));
                 }
             }
         }
@@ -40,15 +43,21 @@ pub async fn check() -> Option<Finding> {
 
     // 2. Config Audit
     let config_paths = vec![
-        "/etc/apache2", "/etc/httpd", "/etc/nginx", 
-        "/usr/local/apache2/conf", "/etc/apache2/sites-enabled", "/etc/nginx/sites-enabled"
+        "/etc/apache2",
+        "/etc/httpd",
+        "/etc/nginx",
+        "/usr/local/apache2/conf",
+        "/etc/apache2/sites-enabled",
+        "/etc/nginx/sites-enabled",
     ];
 
     for base_dir in config_paths {
-        if !Path::new(base_dir).exists() { continue; }
-        
+        if !Path::new(base_dir).exists() {
+            continue;
+        }
+
         details.push(format!("=== Auditing {} ===", base_dir));
-        
+
         for entry in WalkDir::new(base_dir)
             .max_depth(4)
             .follow_links(false)
@@ -56,8 +65,10 @@ pub async fn check() -> Option<Finding> {
             .filter_map(|e| e.ok())
         {
             let path = entry.path();
-            if !path.is_file() { continue; }
-            
+            if !path.is_file() {
+                continue;
+            }
+
             let path_str = path.display().to_string();
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
@@ -75,19 +86,40 @@ pub async fn check() -> Option<Finding> {
                     // Check for credentials
                     for (line_num, line) in content.lines().enumerate() {
                         let l = line.to_lowercase();
-                        if (l.contains("pass") || l.contains("secret") || l.contains("key") || l.contains("token")) && !l.contains("#") {
-                            details.push(format!("  [!] SENSITIVE in {}:{}: {}", path_str, line_num + 1, line.trim()));
+                        if (l.contains("pass")
+                            || l.contains("secret")
+                            || l.contains("key")
+                            || l.contains("token"))
+                            && !l.contains("#")
+                        {
+                            details.push(format!(
+                                "  [!] SENSITIVE in {}:{}: {}",
+                                path_str,
+                                line_num + 1,
+                                line.trim()
+                            ));
                             if finding.severity < Severity::High {
                                 finding.severity = Severity::High;
                             }
                         }
-                        
+
                         // Check for DocumentRoot or root (Nginx)
-                        if l.contains("documentroot") || (name.contains("nginx") && l.trim().starts_with("root")) {
-                            let root_path = line.split_whitespace().last().unwrap_or("").trim_matches(';');
+                        if l.contains("documentroot")
+                            || (name.contains("nginx") && l.trim().starts_with("root"))
+                        {
+                            let root_path = line
+                                .split_whitespace()
+                                .last()
+                                .unwrap_or("")
+                                .trim_matches(';');
                             if !root_path.is_empty() && Path::new(root_path).exists() {
-                                if nix::unistd::access(root_path, nix::unistd::AccessFlags::W_OK).is_ok() {
-                                    details.push(format!("  [!] HIGH: Writable DocumentRoot: {}", root_path));
+                                if nix::unistd::access(root_path, nix::unistd::AccessFlags::W_OK)
+                                    .is_ok()
+                                {
+                                    details.push(format!(
+                                        "  [!] HIGH: Writable DocumentRoot: {}",
+                                        root_path
+                                    ));
                                     if finding.severity < Severity::High {
                                         finding.severity = Severity::High;
                                     }

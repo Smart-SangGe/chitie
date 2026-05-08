@@ -53,7 +53,8 @@ pub async fn check() -> Option<Finding> {
 
         // Check if directory is writable
         if let Ok(metadata) = fs::metadata(path) {
-            if metadata.permissions().mode() & 0o002 != 0 { // Writable by others
+            if metadata.permissions().mode() & 0o002 != 0 {
+                // Writable by others
                 policy_details.push("  ⚠ HIGH: Directory is writable by others!".to_string());
                 finding.severity = Severity::High;
             }
@@ -81,8 +82,12 @@ pub async fn check() -> Option<Finding> {
 
                 // Read and analyze content
                 if let Ok(content) = fs::read_to_string(&file_path) {
-                    if content.contains("polkit.Result.YES") || content.contains("<allow_any>yes</allow_any>") {
-                        policy_details.push("    ⚠ HIGH: File contains rule for unconditional access!".to_string());
+                    if content.contains("polkit.Result.YES")
+                        || content.contains("<allow_any>yes</allow_any>")
+                    {
+                        policy_details.push(
+                            "    ⚠ HIGH: File contains rule for unconditional access!".to_string(),
+                        );
                         finding.severity = Severity::High;
                     }
                     policy_details.push("    --- Content ---".to_string());
@@ -105,7 +110,10 @@ pub async fn check() -> Option<Finding> {
         let mut agent_details = Vec::new();
 
         for line in processes.lines() {
-            if line.to_lowercase().contains("polkit") && !line.contains("grep") && !line.contains("chitie") {
+            if line.to_lowercase().contains("polkit")
+                && !line.contains("grep")
+                && !line.contains("chitie")
+            {
                 if !agent_found {
                     agent_details.push("\n=== Running Polkit Agent(s) ===".to_string());
                     agent_found = true;

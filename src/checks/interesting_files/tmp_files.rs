@@ -17,7 +17,12 @@ pub async fn check() -> Option<Finding> {
 
     let mut results = Vec::new();
     let tmp_dirs = vec![
-        "/tmp", "/var/tmp", "/dev/shm", "/var/backups", "/var/spool/cron", "/var/spool/anacron"
+        "/tmp",
+        "/var/tmp",
+        "/dev/shm",
+        "/var/backups",
+        "/var/spool/cron",
+        "/var/spool/anacron",
     ];
 
     for dir in tmp_dirs {
@@ -34,18 +39,22 @@ pub async fn check() -> Option<Finding> {
             let path = entry.path();
             if path.is_file() {
                 if let Ok(metadata) = entry.metadata() {
-                    let is_readable = nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
-                    
+                    let is_readable =
+                        nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
+
                     if is_readable {
                         let uid = metadata.uid();
                         let path_str = path.display().to_string();
-                        
+
                         // Exclude common noise
-                        if path_str.contains("dpkg.statoverride") || path_str.contains("dpkg.status") {
+                        if path_str.contains("dpkg.statoverride")
+                            || path_str.contains("dpkg.status")
+                        {
                             continue;
                         }
 
-                        if uid == 0 { // Owned by root
+                        if uid == 0 {
+                            // Owned by root
                             results.push(format!("[!] ROOT-OWNED & READABLE: {}", path_str));
                             if finding.severity < Severity::Medium {
                                 finding.severity = Severity::Medium;
@@ -56,9 +65,13 @@ pub async fn check() -> Option<Finding> {
                     }
                 }
             }
-            if results.len() >= 70 { break; }
+            if results.len() >= 70 {
+                break;
+            }
         }
-        if results.len() >= 70 { break; }
+        if results.len() >= 70 {
+            break;
+        }
     }
 
     if results.is_empty() {

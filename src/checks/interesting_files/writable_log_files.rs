@@ -1,8 +1,8 @@
 use crate::{Category, Finding, Severity};
-use std::process::Command;
+use std::fs;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
-use std::fs;
+use std::process::Command;
 use walkdir::WalkDir;
 
 ///  Interesting Files - Writable log files
@@ -27,16 +27,29 @@ pub async fn check() -> Option<Finding> {
     if let Ok(output) = Command::new("logrotate").arg("--version").output() {
         let version_str = String::from_utf8_lossy(&output.stdout);
         let version_err = String::from_utf8_lossy(&output.stderr);
-        let full_version = if version_str.is_empty() { version_err } else { version_str };
-        
-        details.push(format!("logrotate version: {}", full_version.lines().next().unwrap_or("unknown")));
-        
+        let full_version = if version_str.is_empty() {
+            version_err
+        } else {
+            version_str
+        };
+
+        details.push(format!(
+            "logrotate version: {}",
+            full_version.lines().next().unwrap_or("unknown")
+        ));
+
         // Check for vulnerable versions: 3.18.0 and below
-        if full_version.contains(" 1.") || full_version.contains(" 2.") || 
-           full_version.contains(" 3.0") || full_version.contains(" 3.1") {
+        if full_version.contains(" 1.")
+            || full_version.contains(" 2.")
+            || full_version.contains(" 3.0")
+            || full_version.contains(" 3.1")
+        {
             if !full_version.contains(" 3.18.1") && !full_version.contains(" 3.19") {
                 is_vuln_logrotate = true;
-                details.push("[!] logrotate version might be vulnerable to logrotten (CVE-2019-11599)".to_string());
+                details.push(
+                    "[!] logrotate version might be vulnerable to logrotten (CVE-2019-11599)"
+                        .to_string(),
+                );
             }
         }
     }
@@ -56,14 +69,19 @@ pub async fn check() -> Option<Finding> {
                 writable_logs.push(path.display().to_string());
             }
         }
-        if writable_logs.len() >= 50 { break; }
+        if writable_logs.len() >= 50 {
+            break;
+        }
     }
 
     if !writable_logs.is_empty() {
         details.push("=== Writable Log Files ===".to_string());
         for log in &writable_logs {
             if is_vuln_logrotate {
-                details.push(format!("[!] CRITICAL: Writable log (vuln logrotate): {}", log));
+                details.push(format!(
+                    "[!] CRITICAL: Writable log (vuln logrotate): {}",
+                    log
+                ));
                 finding.severity = Severity::Critical;
             } else {
                 details.push(format!("Writable: {}", log));
@@ -117,7 +135,9 @@ pub async fn check() -> Option<Finding> {
                 weak_logs.push(format!("{} (UID: {})", entry.path().display(), uid));
             }
         }
-        if weak_logs.len() >= 20 { break; }
+        if weak_logs.len() >= 20 {
+            break;
+        }
     }
 
     if !weak_logs.is_empty() {

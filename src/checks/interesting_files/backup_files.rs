@@ -36,7 +36,15 @@ pub async fn check() -> Option<Finding> {
     let search_paths = if config.stealth {
         vec!["/etc", "/var/www", "/home", "/opt", "/tmp"]
     } else {
-        vec!["/etc", "/var", "/home", "/opt", "/usr/local", "/tmp", "/root"]
+        vec![
+            "/etc",
+            "/var",
+            "/home",
+            "/opt",
+            "/usr/local",
+            "/tmp",
+            "/root",
+        ]
     };
 
     let mut backup_files = Vec::new();
@@ -58,18 +66,19 @@ pub async fn check() -> Option<Finding> {
             }
 
             let path_str = path.to_string_lossy();
-            let name_lower = path.file_name()
+            let name_lower = path
+                .file_name()
                 .map(|n| n.to_string_lossy().to_lowercase())
                 .unwrap_or_default();
 
             // Check if file name matches backup patterns
             let mut is_backup = false;
-            
+
             // Check extensions (ends with)
             if extensions.iter().any(|ext| name_lower.ends_with(ext)) {
                 is_backup = true;
             }
-            
+
             // Check contains "backup"
             if name_lower.contains("backup") {
                 is_backup = true;
@@ -77,7 +86,10 @@ pub async fn check() -> Option<Finding> {
 
             if is_backup {
                 // Filter out some noise
-                if path_str.contains("/.git/") || path_str.contains("/node_modules/") || path_str.contains("/.cargo/") {
+                if path_str.contains("/.git/")
+                    || path_str.contains("/node_modules/")
+                    || path_str.contains("/.cargo/")
+                {
                     continue;
                 }
 
@@ -91,11 +103,18 @@ pub async fn check() -> Option<Finding> {
     }
 
     // Limit output
-    finding.details.push(format!("Found {} potential backup files (showing top 50):", backup_files.len()));
-    finding.details.extend(backup_files.iter().take(50).cloned());
-    
+    finding.details.push(format!(
+        "Found {} potential backup files (showing top 50):",
+        backup_files.len()
+    ));
+    finding
+        .details
+        .extend(backup_files.iter().take(50).cloned());
+
     if backup_files.len() > 50 {
-        finding.details.push(format!("... and {} more", backup_files.len() - 50));
+        finding
+            .details
+            .push(format!("... and {} more", backup_files.len() - 50));
     }
 
     Some(finding)

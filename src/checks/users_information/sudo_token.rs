@@ -30,7 +30,10 @@ pub async fn check() -> Option<Finding> {
     if let Ok(output) = Command::new("sudo").args(&["-n", "-l"]).output() {
         if output.status.success() {
             let sudo_list = String::from_utf8_lossy(&output.stdout);
-            details.push("⚠ Active sudo session token found! User can run sudo commands without a password.".to_string());
+            details.push(
+                "⚠ Active sudo session token found! User can run sudo commands without a password."
+                    .to_string(),
+            );
             details.push("Sudo privileges:".to_string());
             details.push(sudo_list.trim().to_string());
             finding.severity = Severity::High;
@@ -54,7 +57,9 @@ pub async fn check() -> Option<Finding> {
 
                 // Check for gdb
                 if is_command_in_path("gdb") {
-                    details.push("  - gdb is installed, which can be used for ptrace attacks.".to_string());
+                    details.push(
+                        "  - gdb is installed, which can be used for ptrace attacks.".to_string(),
+                    );
                 }
             } else {
                 details.push(format!("ptrace protection is ENABLED (scope={})", scope));

@@ -1,7 +1,7 @@
 use crate::{Category, Finding, Severity};
+use regex::Regex;
 use std::fs;
 use std::os::unix::fs::MetadataExt;
-use regex::Regex;
 
 ///  Processes & Services - Processes with credentials inside memory or files
 ///  Author: Sangge
@@ -20,8 +20,20 @@ pub async fn check() -> Option<Finding> {
 
     // 1. Common credential-storing processes
     let cred_procs = vec![
-        "gdm-password", "gnome-keyring", "lightdm", "vsftpd", "sshd", "mysql", 
-        "postgres", "redis", "mongod", "memcached", "jenkins", "tomcat", "nginx", "php-fpm"
+        "gdm-password",
+        "gnome-keyring",
+        "lightdm",
+        "vsftpd",
+        "sshd",
+        "mysql",
+        "postgres",
+        "redis",
+        "mongod",
+        "memcached",
+        "jenkins",
+        "tomcat",
+        "nginx",
+        "php-fpm",
     ];
 
     let mut found_procs = Vec::new();
@@ -29,7 +41,7 @@ pub async fn check() -> Option<Finding> {
         for entry in entries.filter_map(|e| e.ok()) {
             let name_os = entry.file_name();
             let name = name_os.to_string_lossy();
-            
+
             if name.chars().all(|c| c.is_ascii_digit()) {
                 let pid = name.to_string();
                 let cmdline_path = entry.path().join("cmdline");
@@ -37,7 +49,10 @@ pub async fn check() -> Option<Finding> {
                     let cmd = cmdline.replace('\0', " ");
                     for cp in &cred_procs {
                         if cmd.contains(cp) {
-                            found_procs.push(format!("  [!] PID {}: {} (potential creds in memory)", pid, cp));
+                            found_procs.push(format!(
+                                "  [!] PID {}: {} (potential creds in memory)",
+                                pid, cp
+                            ));
                             break;
                         }
                     }
@@ -57,7 +72,10 @@ pub async fn check() -> Option<Finding> {
                     }
                     if !sensitive_fds.is_empty() {
                         let uid = entry.metadata().map(|m| m.uid()).unwrap_or(999);
-                        details.push(format!("Process PID {} (UID: {}) has open sensitive files:", pid, uid));
+                        details.push(format!(
+                            "Process PID {} (UID: {}) has open sensitive files:",
+                            pid, uid
+                        ));
                         for f in sensitive_fds {
                             details.push(format!("  └─ {}", f));
                         }
@@ -82,7 +100,10 @@ pub async fn check() -> Option<Finding> {
                     sensitive_maps.sort();
                     sensitive_maps.dedup();
                     if !sensitive_maps.is_empty() {
-                        details.push(format!("Process PID {} has sensitive memory-mapped files:", pid));
+                        details.push(format!(
+                            "Process PID {} has sensitive memory-mapped files:",
+                            pid
+                        ));
                         for m in sensitive_maps {
                             details.push(format!("  └─ {}", m));
                         }
@@ -106,6 +127,12 @@ pub async fn check() -> Option<Finding> {
 }
 
 fn is_sensitive_path(path: &str) -> bool {
-    let re = Regex::new(r"(?i)\.(pem|key|cred|db|sqlite|conf|cnf|ini|env|secret|token|auth|passwd|shadow)$").unwrap();
-    re.is_match(path) || path.contains("/.ssh/") || path.contains("/etc/shadow") || path.contains("/etc/passwd")
+    let re = Regex::new(
+        r"(?i)\.(pem|key|cred|db|sqlite|conf|cnf|ini|env|secret|token|auth|passwd|shadow)$",
+    )
+    .unwrap();
+    re.is_match(path)
+        || path.contains("/.ssh/")
+        || path.contains("/etc/shadow")
+        || path.contains("/etc/passwd")
 }

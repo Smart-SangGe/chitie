@@ -1,6 +1,6 @@
 use crate::{Category, Finding, Severity};
-use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use grep::regex::RegexMatcher;
+use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use ignore::WalkBuilder;
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
@@ -54,17 +54,14 @@ pub async fn run() -> Option<Finding> {
     }
 
     let mut builder = WalkBuilder::new(log_dir);
-    builder
-        .threads(4)
-        .max_depth(Some(5))
-        .filter_entry(|e| {
-            if e.file_type().map_or(false, |ft| ft.is_file()) {
-                let name = e.file_name().to_string_lossy();
-                // Skip rotated logs to save time unless requested
-                return !name.contains(".gz") && !name.contains(".xz");
-            }
-            true
-        });
+    builder.threads(4).max_depth(Some(5)).filter_entry(|e| {
+        if e.file_type().map_or(false, |ft| ft.is_file()) {
+            let name = e.file_name().to_string_lossy();
+            // Skip rotated logs to save time unless requested
+            return !name.contains(".gz") && !name.contains(".xz");
+        }
+        true
+    });
 
     builder.build_parallel().run(move || {
         let matcher = matcher.clone();
@@ -74,7 +71,7 @@ pub async fn run() -> Option<Finding> {
         let ip_re = ip_re.clone();
         let email_re = email_re.clone();
         let pwd_re = pwd_re.clone();
-        
+
         Box::new(move |entry| {
             if start_time.elapsed() > timeout {
                 return ignore::WalkState::Quit;
@@ -90,10 +87,11 @@ pub async fn run() -> Option<Finding> {
             }
 
             let path = entry.path().to_owned();
-            
+
             // Limit log file size for analysis
             if let Ok(meta) = entry.metadata() {
-                if meta.len() > 5 * 1024 * 1024 { // 5MB limit
+                if meta.len() > 5 * 1024 * 1024 {
+                    // 5MB limit
                     return ignore::WalkState::Continue;
                 }
             }
@@ -111,21 +109,29 @@ pub async fn run() -> Option<Finding> {
 
             impl Sink for LogSink {
                 type Error = std::io::Error;
-                fn matched(&mut self, _searcher: &Searcher, mat: &SinkMatch) -> Result<bool, Self::Error> {
+                fn matched(
+                    &mut self,
+                    _searcher: &Searcher,
+                    mat: &SinkMatch,
+                ) -> Result<bool, Self::Error> {
                     let line = String::from_utf8_lossy(mat.bytes());
-                    
+
                     // Extract IPs
                     for m in self.ip_re.find_iter(&line) {
                         let mut guard = self.ips.lock().unwrap();
                         guard.insert(m.as_str().to_string());
-                        if guard.len() > 1000 { break; }
+                        if guard.len() > 1000 {
+                            break;
+                        }
                     }
 
                     // Extract Emails
                     for m in self.email_re.find_iter(&line) {
                         let mut guard = self.emails.lock().unwrap();
                         guard.insert(m.as_str().to_string());
-                        if guard.len() > 1000 { break; }
+                        if guard.len() > 1000 {
+                            break;
+                        }
                     }
 
                     // Extract Password related lines
@@ -161,22 +167,36 @@ pub async fn run() -> Option<Finding> {
     });
 
     let mut details = Vec::new();
-    
+
     let collected_ips = ips.lock().unwrap();
     if !collected_ips.is_empty() {
-        details.push(format!("Found {} unique IP addresses in logs (showing 20):", collected_ips.len()));
+        details.push(format!(
+            "Found {} unique IP addresses in logs (showing 20):",
+            collected_ips.len()
+        ));
         details.extend(collected_ips.iter().take(20).map(|s| format!("  - {}", s)));
     }
 
     let collected_emails = emails.lock().unwrap();
     if !collected_emails.is_empty() {
-        details.push(format!("Found {} unique email addresses in logs (showing 10):", collected_emails.len()));
-        details.extend(collected_emails.iter().take(10).map(|s| format!("  - {}", s)));
+        details.push(format!(
+            "Found {} unique email addresses in logs (showing 10):",
+            collected_emails.len()
+        ));
+        details.extend(
+            collected_emails
+                .iter()
+                .take(10)
+                .map(|s| format!("  - {}", s)),
+        );
     }
 
     let collected_pwds = pwd_matches.lock().unwrap();
     if !collected_pwds.is_empty() {
-        details.push(format!("Found {} lines with password keywords in logs (showing 20):", collected_pwds.len()));
+        details.push(format!(
+            "Found {} lines with password keywords in logs (showing 20):",
+            collected_pwds.len()
+        ));
         details.extend(collected_pwds.iter().take(20).map(|s| format!("  - {}", s)));
     }
 

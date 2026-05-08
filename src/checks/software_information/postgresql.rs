@@ -1,7 +1,7 @@
 use crate::{Category, Finding, Severity};
 use std::fs;
-use std::process::Command;
 use std::path::Path;
+use std::process::Command;
 use walkdir::WalkDir;
 
 ///  Software Information - PostgreSQL
@@ -33,7 +33,9 @@ pub async fn check() -> Option<Finding> {
     // 2. Config files
     let config_dirs = vec!["/etc/postgresql", "/var/lib/pgsql", "/var/lib/postgresql"];
     for dir in config_dirs {
-        if !Path::new(dir).exists() { continue; }
+        if !Path::new(dir).exists() {
+            continue;
+        }
         for entry in WalkDir::new(dir)
             .max_depth(4)
             .follow_links(false)
@@ -42,11 +44,14 @@ pub async fn check() -> Option<Finding> {
         {
             let path = entry.path();
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-            
+
             if name == "pg_hba.conf" || name == "postgresql.conf" {
                 let is_readable = nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
                 if is_readable {
-                    details.push(format!("[!] SENSITIVE: Readable Postgres config: {}", path.display()));
+                    details.push(format!(
+                        "[!] SENSITIVE: Readable Postgres config: {}",
+                        path.display()
+                    ));
                     if finding.severity < Severity::High {
                         finding.severity = Severity::High;
                     }
@@ -71,11 +76,19 @@ pub async fn check() -> Option<Finding> {
     for user in users {
         for db in &dbs {
             let mut cmd = Command::new("psql");
-            cmd.arg("-U").arg(user).arg("-d").arg(db).arg("-c").arg("SELECT version()");
-            
+            cmd.arg("-U")
+                .arg(user)
+                .arg("-d")
+                .arg(db)
+                .arg("-c")
+                .arg("SELECT version()");
+
             if let Ok(output) = cmd.output() {
                 if output.status.success() {
-                    details.push(format!("[!] CRITICAL: Successful PostgreSQL login as {} to {} with NOPASS!", user, db));
+                    details.push(format!(
+                        "[!] CRITICAL: Successful PostgreSQL login as {} to {} with NOPASS!",
+                        user, db
+                    ));
                     finding.severity = Severity::Critical;
                     break;
                 }

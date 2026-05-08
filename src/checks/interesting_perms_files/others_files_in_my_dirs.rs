@@ -25,10 +25,18 @@ pub async fn check() -> Option<Finding> {
     let mut results = Vec::new();
     let mut dir_count = 0;
 
-    // We only search in some common areas to avoid full disk scan if possible, 
+    // We only search in some common areas to avoid full disk scan if possible,
     // but LinPEAS uses $ROOT_FOLDER. Let's use / as well but with some limits.
     // For performance, we'll avoid /proc, /sys etc.
-    let exclude_dirs = vec!["/proc", "/sys", "/dev", "/run", "/tmp", "/var/tmp", "/var/lib/docker"];
+    let exclude_dirs = vec![
+        "/proc",
+        "/sys",
+        "/dev",
+        "/run",
+        "/tmp",
+        "/var/tmp",
+        "/var/lib/docker",
+    ];
 
     for entry in WalkDir::new("/")
         .max_depth(10)
@@ -53,13 +61,15 @@ pub async fn check() -> Option<Finding> {
                             if let Ok(child_metadata) = child_entry.metadata() {
                                 if child_metadata.uid() != current_uid {
                                     others_files.push(format!(
-                                        "{} (owner: {})", 
+                                        "{} (owner: {})",
                                         child_entry.file_name().to_string_lossy(),
                                         child_metadata.uid()
                                     ));
                                 }
                             }
-                            if others_files.len() >= 5 { break; } // Limit child display
+                            if others_files.len() >= 5 {
+                                break;
+                            } // Limit child display
                         }
 
                         if !others_files.is_empty() {

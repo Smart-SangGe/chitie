@@ -43,13 +43,22 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
     // Define regex patterns with names
     let patterns_data = vec![
         ("AWS Access Key ID", r"AKIA[0-9A-Z]{16}"),
-        ("AWS Secret Access Key", r"(?i)aws_secret_access_key\s*=\s*[a-zA-Z0-9/+] {40}"),
+        (
+            "AWS Secret Access Key",
+            r"(?i)aws_secret_access_key\s*=\s*[a-zA-Z0-9/+] {40}",
+        ),
         ("Google Cloud API Key", r"AIza[0-9A-Za-z\-_]{35}"),
         ("Google OAuth Access Token", r"ya29\.[0-9A-Za-z\-_]+"),
         ("Slack Token", r"xox[baprs]-([0-9a-zA-Z]{10,48})"),
         ("Private Key", r"-----BEGIN [A-Z]+ PRIVATE KEY-----"),
-        ("Generic API Key", r#"(?i)(api_key|apikey|secret|token)\s*[:=]\s*['"][a-zA-Z0-9\-_]{16,64}['"]"#),
-        ("Azure Shared Key", r"DefaultEndpointsProtocol=[^;]+;AccountName=[^;]+;AccountKey=[^;]+;"),
+        (
+            "Generic API Key",
+            r#"(?i)(api_key|apikey|secret|token)\s*[:=]\s*['"][a-zA-Z0-9\-_]{16,64}['"]"#,
+        ),
+        (
+            "Azure Shared Key",
+            r"DefaultEndpointsProtocol=[^;]+;AccountName=[^;]+;AccountKey=[^;]+;",
+        ),
         ("Facebook Access Token", r"EAACEdEose0cBA[0-9A-Za-z]+"),
         ("GitHub Personal Access Token", r"ghp_[0-9a-zA-Z]{36}"),
         ("Stripe Publishable Key", r"pk_live_[0-9a-zA-Z]{24}"),
@@ -57,7 +66,10 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
     ];
 
     // 1. Build a combined regex for grep (fast filtering)
-    let pattern_strings: Vec<String> = patterns_data.iter().map(|(_, p)| format!("({})", p)).collect();
+    let pattern_strings: Vec<String> = patterns_data
+        .iter()
+        .map(|(_, p)| format!("({})", p))
+        .collect();
     let combined_pattern = pattern_strings.join("|");
     let matcher = RegexMatcher::new_line_matcher(&combined_pattern)?;
 
@@ -90,7 +102,7 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
     for dir in &search_dirs[1..] {
         builder.add(dir);
     }
-    
+
     // Configure walker
     builder
         .threads(4) // Parallelism
@@ -103,7 +115,12 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
             let path = e.path();
             if path.is_dir() {
                 let name = e.file_name().to_string_lossy();
-                if name == "node_modules" || name == ".git" || name == "proc" || name == "sys" || name == "dev" {
+                if name == "node_modules"
+                    || name == ".git"
+                    || name == "proc"
+                    || name == "sys"
+                    || name == "dev"
+                {
                     return false;
                 }
             }
@@ -115,7 +132,7 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
         let matcher = matcher.clone();
         let results = results_clone.clone();
         let compiled_patterns = compiled_patterns.clone();
-        
+
         Box::new(move |entry| {
             // Check timeout
             if start_time.elapsed() > timeout {
@@ -130,15 +147,16 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
             if !entry.file_type().map_or(false, |ft| ft.is_file()) {
                 return ignore::WalkState::Continue;
             }
-            
+
             if let Ok(metadata) = entry.metadata() {
-                if metadata.len() > 10 * 1024 * 1024 { // Skip > 10MB
+                if metadata.len() > 10 * 1024 * 1024 {
+                    // Skip > 10MB
                     return ignore::WalkState::Continue;
                 }
             }
 
             let path = entry.path().to_owned();
-            
+
             // Matcher sink
             struct MatchCollector {
                 path: std::path::PathBuf,
@@ -150,9 +168,13 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
             impl Sink for MatchCollector {
                 type Error = std::io::Error;
 
-                fn matched(&mut self, _searcher: &Searcher, mat: &SinkMatch) -> Result<bool, Self::Error> {
+                fn matched(
+                    &mut self,
+                    _searcher: &Searcher,
+                    mat: &SinkMatch,
+                ) -> Result<bool, Self::Error> {
                     let line = String::from_utf8_lossy(mat.bytes());
-                    
+
                     // Identify which pattern matched
                     for (name, re) in self.compiled_patterns.iter() {
                         if re.is_match(&line) {
@@ -165,8 +187,13 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
                                 };
 
                                 let mut guard = self.results.lock().unwrap();
-                                guard.push(format!("FOUND {}: {} in {}", name, display_str, self.path.display()));
-                                
+                                guard.push(format!(
+                                    "FOUND {}: {} in {}",
+                                    name,
+                                    display_str,
+                                    self.path.display()
+                                ));
+
                                 self.match_count += 1;
                                 break; // Only report the first matching type per line to avoid duplicates
                             }
@@ -200,7 +227,7 @@ pub async fn run() -> anyhow::Result<Vec<Finding>> {
     });
 
     let collected_results = results.lock().unwrap();
-    
+
     if collected_results.is_empty() {
         return Ok(vec![]);
     }

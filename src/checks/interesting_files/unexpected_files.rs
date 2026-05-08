@@ -24,7 +24,12 @@ pub async fn check() -> Option<Finding> {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
             if let Ok(metadata) = entry.metadata() {
-                opt_files.push(format!("  {} (mode: {:o}, owner: {})", path.display(), metadata.mode() & 0o777, metadata.uid()));
+                opt_files.push(format!(
+                    "  {} (mode: {:o}, owner: {})",
+                    path.display(),
+                    metadata.mode() & 0o777,
+                    metadata.uid()
+                ));
             }
         }
         if !opt_files.is_empty() {
@@ -42,10 +47,15 @@ pub async fn check() -> Option<Finding> {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
             let path_str = path.display().to_string();
-            
+
             if !common_root_re.is_match(&path_str) {
                 if let Ok(metadata) = entry.metadata() {
-                    unexpected_root.push(format!("  {} (mode: {:o}, owner: {})", path_str, metadata.mode() & 0o777, metadata.uid()));
+                    unexpected_root.push(format!(
+                        "  {} (mode: {:o}, owner: {})",
+                        path_str,
+                        metadata.mode() & 0o777,
+                        metadata.uid()
+                    ));
                     if finding.severity < Severity::Medium {
                         finding.severity = Severity::Medium;
                     }

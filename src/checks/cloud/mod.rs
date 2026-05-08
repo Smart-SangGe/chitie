@@ -4,9 +4,7 @@ use crate::Finding;
 
 /// 运行所有云环境检查
 pub async fn run() -> anyhow::Result<Vec<Finding>> {
-    let handles = vec![
-        tokio::spawn(detect::check()),
-    ];
+    let handles = vec![tokio::spawn(detect::check())];
 
     let mut findings = Vec::new();
     for handle in handles {

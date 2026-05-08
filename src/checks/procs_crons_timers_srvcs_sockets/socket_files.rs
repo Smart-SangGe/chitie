@@ -160,7 +160,9 @@ fn check_socket_file(socket_path: &str, details: &mut Vec<String>, finding: &mut
             // 检查Listen指令
             if trimmed.starts_with("Listen") {
                 if let Some(listen_part) = trimmed.split('=').nth(1) {
-                    let listen_path = listen_part.trim().trim_start_matches(&['@', '-', '+', '!'][..]);
+                    let listen_path = listen_part
+                        .trim()
+                        .trim_start_matches(&['@', '-', '+', '!'][..]);
 
                     // 只检查Unix socket路径 (以/开头)
                     if listen_path.starts_with('/') {

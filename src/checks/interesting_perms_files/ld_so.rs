@@ -23,7 +23,9 @@ pub async fn check() -> Option<Finding> {
         "Misconfigured ld.so",
         "Misconfigurations in ld.so could lead to privilege escalation",
     )
-    .with_reference("https://book.hacktricks.wiki/en/linux-hardening/privilege-escalation/index.html#ldso");
+    .with_reference(
+        "https://book.hacktricks.wiki/en/linux-hardening/privilege-escalation/index.html#ldso",
+    );
 
     let mut details = Vec::new();
     let mut high_severity = false;
@@ -32,7 +34,10 @@ pub async fn check() -> Option<Finding> {
     let ld_so_conf = "/etc/ld.so.conf";
     if let Ok(metadata) = fs::metadata(ld_so_conf) {
         if is_writable(&metadata) {
-            details.push(format!("CRITICAL: You have write privileges over {}", ld_so_conf));
+            details.push(format!(
+                "CRITICAL: You have write privileges over {}",
+                ld_so_conf
+            ));
             high_severity = true;
         }
 
@@ -45,7 +50,10 @@ pub async fn check() -> Option<Finding> {
     let ld_so_preload = "/etc/ld.so.preload";
     if let Ok(metadata) = fs::metadata(ld_so_preload) {
         if is_writable(&metadata) {
-            details.push(format!("CRITICAL: You have write privileges over {}", ld_so_preload));
+            details.push(format!(
+                "CRITICAL: You have write privileges over {}",
+                ld_so_preload
+            ));
             high_severity = true;
         }
 
@@ -94,7 +102,7 @@ fn handle_include(pattern: &str, details: &mut Vec<String>, high_severity: &mut 
     if let Some(star_idx) = pattern.find('*') {
         let dir_part = &pattern[..star_idx];
         let dir_path = Path::new(dir_part);
-        
+
         let parent = if dir_path.is_dir() {
             dir_path
         } else {
@@ -144,4 +152,3 @@ fn is_writable(metadata: &fs::Metadata) -> bool {
     }
     false
 }
-

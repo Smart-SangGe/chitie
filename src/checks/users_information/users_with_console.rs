@@ -23,9 +23,10 @@ pub async fn check() -> Option<Finding> {
             if let Some(shell) = line.rsplit(':').next() {
                 // Heuristic used by LinPEAS: check if the shell ends with "sh"
                 // Also check for other common shells and exclude common nologin shells.
-                let is_login_shell = (shell.ends_with("sh") || shell.ends_with("fish") || shell.ends_with("csh"))
-                    && !shell.ends_with("nologin")
-                    && !shell.ends_with("false");
+                let is_login_shell =
+                    (shell.ends_with("sh") || shell.ends_with("fish") || shell.ends_with("csh"))
+                        && !shell.ends_with("nologin")
+                        && !shell.ends_with("false");
 
                 if is_login_shell {
                     login_users.push(line.to_string());

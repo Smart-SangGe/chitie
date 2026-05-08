@@ -1,7 +1,7 @@
 use crate::{Category, Finding, Severity};
+use regex::Regex;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use regex::Regex;
 
 ///  Interesting Permissions - Credential Files
 ///  Author: Sangge
@@ -36,8 +36,12 @@ pub async fn check() -> Option<Finding> {
             let parts: Vec<&str> = line.split(':').collect();
             if parts.len() > 1 {
                 let pwd_field = parts[1];
-                if pwd_field != "x" && pwd_field != "*" && pwd_field != "!" && !pwd_field.is_empty() {
-                    details.push(format!("CRITICAL: Password hash found in /etc/passwd: {}", line));
+                if pwd_field != "x" && pwd_field != "*" && pwd_field != "!" && !pwd_field.is_empty()
+                {
+                    details.push(format!(
+                        "CRITICAL: Password hash found in /etc/passwd: {}",
+                        line
+                    ));
                     high_severity = true;
                     finding.severity = Severity::Critical;
                 }
@@ -59,7 +63,8 @@ pub async fn check() -> Option<Finding> {
 
     // 3. Credentials in fstab/mtab
     let fstab_paths = ["/etc/fstab", "/etc/mtab"];
-    let cred_regex = Regex::new(r"(?i)(user|username|login|pass|password|pw|credentials)[=:]").unwrap();
+    let cred_regex =
+        Regex::new(r"(?i)(user|username|login|pass|password|pw|credentials)[=:]").unwrap();
     for p in fstab_paths {
         if let Ok(content) = fs::read_to_string(p) {
             for line in content.lines() {
@@ -73,9 +78,13 @@ pub async fn check() -> Option<Finding> {
 
     // 4. Readable shadow files
     let shadow_files = [
-        "/etc/shadow", "/etc/shadow-", "/etc/shadow~", 
-        "/etc/gshadow", "/etc/gshadow-", 
-        "/etc/master.passwd", "/etc/spwd.db"
+        "/etc/shadow",
+        "/etc/shadow-",
+        "/etc/shadow~",
+        "/etc/gshadow",
+        "/etc/gshadow-",
+        "/etc/master.passwd",
+        "/etc/spwd.db",
     ];
     for p in shadow_files {
         if fs::read(p).is_ok() {
@@ -109,7 +118,7 @@ pub async fn check() -> Option<Finding> {
                 writable_net.push(net_scripts.to_string());
             }
         }
-        
+
         // Also check files inside
         if let Ok(entries) = fs::read_dir(net_scripts) {
             for entry in entries.filter_map(|e| e.ok()) {
@@ -143,19 +152,19 @@ pub async fn check() -> Option<Finding> {
     Some(finding)
 }
 
-use std::path::Path;
-use std::os::unix::fs::MetadataExt;
 use nix::unistd::{getgroups, getuid};
+use std::os::unix::fs::MetadataExt;
+use std::path::Path;
 
 fn is_writable(metadata: &fs::Metadata) -> bool {
     let mode = metadata.permissions().mode();
     let current_uid = getuid().as_raw();
-    
+
     // World writable
     if mode & 0o002 != 0 {
         return true;
     }
-    
+
     // Owned by user
     if metadata.uid() == current_uid && (mode & 0o200 != 0) {
         return true;
@@ -167,7 +176,7 @@ fn is_writable(metadata: &fs::Metadata) -> bool {
         .into_iter()
         .map(|g| g.as_raw())
         .collect();
-    
+
     if current_groups.contains(&metadata.gid()) && (mode & 0o020 != 0) {
         return true;
     }

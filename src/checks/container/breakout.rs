@@ -1,7 +1,7 @@
 use crate::{Category, Finding, Severity};
 use std::fs;
-use std::process::Command;
 use std::path::Path;
+use std::process::Command;
 
 ///  Container - Container Breakout Enumeration
 ///  Author: Sangge
@@ -34,18 +34,30 @@ pub async fn check() -> Option<Finding> {
         for line in status.lines() {
             if line.starts_with("Seccomp:") {
                 let val = line.split(':').nth(1).unwrap_or("").trim();
-                let status = if val == "0" { "[!] Seccomp: DISABLED" } else { "Seccomp: enabled" };
+                let status = if val == "0" {
+                    "[!] Seccomp: DISABLED"
+                } else {
+                    "Seccomp: enabled"
+                };
                 details.push(status.to_string());
-                if val == "0" && finding.severity < Severity::High { finding.severity = Severity::High; }
+                if val == "0" && finding.severity < Severity::High {
+                    finding.severity = Severity::High;
+                }
             }
         }
     }
 
     if let Ok(apparmor) = fs::read_to_string("/proc/self/attr/current") {
         let val = apparmor.trim();
-        let status = if val == "unconfined" { "[!] AppArmor: UNCONFINED" } else { "AppArmor: enabled" };
+        let status = if val == "unconfined" {
+            "[!] AppArmor: UNCONFINED"
+        } else {
+            "AppArmor: enabled"
+        };
         details.push(status.to_string());
-        if val == "unconfined" && finding.severity < Severity::High { finding.severity = Severity::High; }
+        if val == "unconfined" && finding.severity < Severity::High {
+            finding.severity = Severity::High;
+        }
     }
 
     if fs::metadata("/proc/self/uid_map").is_ok() {
@@ -56,7 +68,10 @@ pub async fn check() -> Option<Finding> {
     details.push("\n=== Runtime Vulnerabilities ===".to_string());
     if let Ok(output) = Command::new("runc").arg("--version").output() {
         let out = String::from_utf8_lossy(&output.stdout);
-        details.push(format!("runc version: {}", out.lines().next().unwrap_or("unknown")));
+        details.push(format!(
+            "runc version: {}",
+            out.lines().next().unwrap_or("unknown")
+        ));
         if out.contains("version 1.0.0-rc") || out.contains("version 0.") {
             details.push("[!] CRITICAL: runc might be vulnerable to CVE-2019-5736!".to_string());
             finding.severity = Severity::Critical;
@@ -66,8 +81,14 @@ pub async fn check() -> Option<Finding> {
     if let Ok(output) = Command::new("containerd").arg("--version").output() {
         let out = String::from_utf8_lossy(&output.stdout);
         details.push(format!("containerd version: {}", out.trim()));
-        if out.contains("v1.4.0") || out.contains("v1.4.1") || out.contains("v1.4.2") || out.contains("v1.3.") {
-            details.push("[!] CRITICAL: containerd might be vulnerable to CVE-2020-15257!".to_string());
+        if out.contains("v1.4.0")
+            || out.contains("v1.4.1")
+            || out.contains("v1.4.2")
+            || out.contains("v1.3.")
+        {
+            details.push(
+                "[!] CRITICAL: containerd might be vulnerable to CVE-2020-15257!".to_string(),
+            );
             finding.severity = Severity::Critical;
         }
     }
@@ -82,12 +103,19 @@ pub async fn check() -> Option<Finding> {
                 finding.severity = Severity::Critical;
             }
             if line.contains("/host") || (line.contains(" / ") && !line.contains("overlay")) {
-                details.push(format!("[!] HIGH: Host filesystem might be mounted: {}", line));
-                if finding.severity < Severity::High { finding.severity = Severity::High; }
+                details.push(format!(
+                    "[!] HIGH: Host filesystem might be mounted: {}",
+                    line
+                ));
+                if finding.severity < Severity::High {
+                    finding.severity = Severity::High;
+                }
             }
             if line.contains("rw,") && (line.contains("/sys") || line.contains("/proc")) {
                 details.push(format!("[!] WARNING: Writable /sys or /proc: {}", line));
-                if finding.severity < Severity::Medium { finding.severity = Severity::Medium; }
+                if finding.severity < Severity::Medium {
+                    finding.severity = Severity::Medium;
+                }
             }
         }
     }
@@ -101,8 +129,13 @@ pub async fn check() -> Option<Finding> {
                 let caps = line.split(':').nth(1).unwrap_or("").trim();
                 // Check for dangerous caps (Simplified check for common privileged values)
                 if caps != "0000000000000000" && caps != "00000000a80425fb" {
-                    details.push("[!] HIGH: Excessive capabilities detected! Run 'capsh --decode' to audit.".to_string());
-                    if finding.severity < Severity::High { finding.severity = Severity::High; }
+                    details.push(
+                        "[!] HIGH: Excessive capabilities detected! Run 'capsh --decode' to audit."
+                            .to_string(),
+                    );
+                    if finding.severity < Severity::High {
+                        finding.severity = Severity::High;
+                    }
                 }
             }
         }
@@ -112,7 +145,9 @@ pub async fn check() -> Option<Finding> {
     let k8s_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token";
     if Path::new(k8s_token_path).exists() {
         details.push("\n=== Kubernetes Specific Checks ===".to_string());
-        if let Ok(ns) = fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/namespace") {
+        if let Ok(ns) =
+            fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+        {
             details.push(format!("K8s Namespace: {}", ns.trim()));
         }
         details.push(format!("[!] K8s Token found at: {}", k8s_token_path));
@@ -147,7 +182,11 @@ fn is_in_container() -> bool {
         return true;
     }
     if let Ok(cgroup) = fs::read_to_string("/proc/1/cgroup") {
-        if cgroup.contains("docker") || cgroup.contains("lxc") || cgroup.contains("kubepods") || cgroup.contains("containerd") {
+        if cgroup.contains("docker")
+            || cgroup.contains("lxc")
+            || cgroup.contains("kubepods")
+            || cgroup.contains("containerd")
+        {
             return true;
         }
     }

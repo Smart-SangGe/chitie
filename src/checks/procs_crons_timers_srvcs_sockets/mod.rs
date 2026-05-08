@@ -1,16 +1,16 @@
-pub mod processes;
 pub mod cron_jobs;
-pub mod process_binaries_perms;
-pub mod processes_ppid_different_user;
-pub mod files_open_by_other_users;
-pub mod system_timers;
-pub mod services;
-pub mod systemd_info;
-pub mod socket_files;
-pub mod unix_sockets;
-pub mod rcommands_trust;
 pub mod dbus_analysis;
+pub mod files_open_by_other_users;
+pub mod process_binaries_perms;
 pub mod process_creds;
+pub mod processes;
+pub mod processes_ppid_different_user;
+pub mod rcommands_trust;
+pub mod services;
+pub mod socket_files;
+pub mod system_timers;
+pub mod systemd_info;
+pub mod unix_sockets;
 
 use crate::Finding;
 

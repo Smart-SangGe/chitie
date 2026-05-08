@@ -42,20 +42,24 @@ pub async fn check() -> Option<Finding> {
         {
             let path = entry.path();
             let path_str = path.display().to_string();
-            
+
             if let Ok(metadata) = entry.metadata() {
                 let mode = metadata.permissions().mode();
-                
+
                 // Identify interesting web files (config, .env, etc.)
                 let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-                let is_interesting = name.contains("config") || 
-                                   name.starts_with(".env") || 
-                                   name.starts_with(".ht") || 
-                                   name.contains("secret") ||
-                                   name.contains("pwd");
+                let is_interesting = name.contains("config")
+                    || name.starts_with(".env")
+                    || name.starts_with(".ht")
+                    || name.contains("secret")
+                    || name.contains("pwd");
 
                 if is_interesting {
-                    results.push(format!("  [!] INTERESTING: {} (mode: {:o})", path_str, mode & 0o777));
+                    results.push(format!(
+                        "  [!] INTERESTING: {} (mode: {:o})",
+                        path_str,
+                        mode & 0o777
+                    ));
                     if finding.severity < Severity::Medium {
                         finding.severity = Severity::Medium;
                     }
@@ -64,7 +68,9 @@ pub async fn check() -> Option<Finding> {
                     results.push(format!("  {} (mode: {:o})", path_str, mode & 0o777));
                 }
             }
-            if results.len() >= 150 { break; }
+            if results.len() >= 150 {
+                break;
+            }
         }
     }
 

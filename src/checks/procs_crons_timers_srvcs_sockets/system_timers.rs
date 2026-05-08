@@ -37,11 +37,7 @@ pub async fn check() -> Option<Finding> {
     let mut details = Vec::new();
 
     // 检查systemctl是否可用
-    if Command::new("systemctl")
-        .arg("--version")
-        .output()
-        .is_err()
-    {
+    if Command::new("systemctl").arg("--version").output().is_err() {
         details.push("systemctl not available (not using systemd?)".to_string());
         finding.details = details;
         return Some(finding);
@@ -59,9 +55,7 @@ pub async fn check() -> Option<Finding> {
 
             for line in stdout.lines() {
                 // 跳过标题和汇总行
-                if line.contains("NEXT")
-                    || line.contains("timers listed")
-                    || line.trim().is_empty()
+                if line.contains("NEXT") || line.contains("timers listed") || line.trim().is_empty()
                 {
                     continue;
                 }
@@ -105,7 +99,12 @@ pub async fn check() -> Option<Finding> {
                         if let Some(service_name) = unit.strip_prefix("Unit=") {
                             let service_name = service_name.trim();
                             if !service_name.is_empty() && service_name != "n/a" {
-                                check_timer_service(service_name, timer_name, &mut details, &mut finding);
+                                check_timer_service(
+                                    service_name,
+                                    timer_name,
+                                    &mut details,
+                                    &mut finding,
+                                );
                             }
                         }
                     }
@@ -126,7 +125,12 @@ pub async fn check() -> Option<Finding> {
     // 列出禁用的timers
     details.push("=== DISABLED TIMERS ===".to_string());
     if let Ok(output) = Command::new("systemctl")
-        .args(&["list-unit-files", "--type=timer", "--state=disabled", "--no-pager"])
+        .args(&[
+            "list-unit-files",
+            "--type=timer",
+            "--state=disabled",
+            "--no-pager",
+        ])
         .output()
     {
         if output.status.success() {
@@ -216,10 +220,7 @@ fn check_timer_file(
             let trimmed = line.trim();
             // 检查相对路径
             if trimmed.starts_with("Unit=") && !trimmed.contains("Unit=/") {
-                details.push(format!(
-                    "  ⚠ RELATIVE PATH in {}: {}",
-                    timer_name, trimmed
-                ));
+                details.push(format!("  ⚠ RELATIVE PATH in {}: {}", timer_name, trimmed));
                 finding.severity = Severity::Medium;
             }
         }

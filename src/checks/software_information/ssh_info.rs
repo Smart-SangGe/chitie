@@ -1,6 +1,6 @@
 use crate::{Category, Finding, Severity};
 use std::fs;
-use std::os::unix::fs::{MetadataExt, FileTypeExt};
+use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::path::Path;
 use walkdir::WalkDir;
 
@@ -25,21 +25,34 @@ pub async fn check() -> Option<Finding> {
         if let Ok(content) = fs::read_to_string(sshd_config) {
             details.push("=== sshd_config Audit ===".to_string());
             let interesting_keys = [
-                "PermitRootLogin", "ChallengeResponseAuthentication", "PasswordAuthentication",
-                "UsePAM", "Port", "PermitEmptyPasswords", "PubkeyAuthentication",
-                "ListenAddress", "ForwardAgent", "AllowAgentForwarding", "AuthorizedKeysFile"
+                "PermitRootLogin",
+                "ChallengeResponseAuthentication",
+                "PasswordAuthentication",
+                "UsePAM",
+                "Port",
+                "PermitEmptyPasswords",
+                "PubkeyAuthentication",
+                "ListenAddress",
+                "ForwardAgent",
+                "AllowAgentForwarding",
+                "AuthorizedKeysFile",
             ];
-            
+
             for line in content.lines() {
                 let trimmed = line.trim();
-                if trimmed.is_empty() || trimmed.starts_with('#') { continue; }
-                
+                if trimmed.is_empty() || trimmed.starts_with('#') {
+                    continue;
+                }
+
                 for key in &interesting_keys {
                     if trimmed.to_lowercase().contains(&key.to_lowercase()) {
-                        let is_bad = (trimmed.contains("PermitRootLogin") && trimmed.to_lowercase().contains("yes")) ||
-                                    (trimmed.contains("PermitEmptyPasswords") && trimmed.to_lowercase().contains("yes")) ||
-                                    (trimmed.contains("PasswordAuthentication") && trimmed.to_lowercase().contains("yes"));
-                        
+                        let is_bad = (trimmed.contains("PermitRootLogin")
+                            && trimmed.to_lowercase().contains("yes"))
+                            || (trimmed.contains("PermitEmptyPasswords")
+                                && trimmed.to_lowercase().contains("yes"))
+                            || (trimmed.contains("PasswordAuthentication")
+                                && trimmed.to_lowercase().contains("yes"));
+
                         if is_bad {
                             details.push(format!("[!] DANGEROUS: {}", trimmed));
                             if finding.severity < Severity::Medium {
@@ -57,9 +70,11 @@ pub async fn check() -> Option<Finding> {
     // 2. Search for private keys
     let mut private_keys = Vec::new();
     let search_dirs = vec!["/etc/ssh", "/home", "/root", "/mnt", "/tmp"];
-    
+
     for dir in search_dirs {
-        if !Path::new(dir).exists() { continue; }
+        if !Path::new(dir).exists() {
+            continue;
+        }
         for entry in WalkDir::new(dir)
             .max_depth(4)
             .follow_links(false)
@@ -73,9 +88,13 @@ pub async fn check() -> Option<Finding> {
                     }
                 }
             }
-            if private_keys.len() >= 20 { break; }
+            if private_keys.len() >= 20 {
+                break;
+            }
         }
-        if private_keys.len() >= 20 { break; }
+        if private_keys.len() >= 20 {
+            break;
+        }
     }
 
     if !private_keys.is_empty() {
@@ -89,7 +108,9 @@ pub async fn check() -> Option<Finding> {
     // 3. Check for writable SSH Agent sockets
     let current_uid = nix::unistd::getuid().as_raw();
     for dir in &["/tmp", "/etc", "/home"] {
-        if !Path::new(dir).exists() { continue; }
+        if !Path::new(dir).exists() {
+            continue;
+        }
         for entry in WalkDir::new(dir)
             .max_depth(3)
             .follow_links(false)
@@ -100,8 +121,14 @@ pub async fn check() -> Option<Finding> {
                 let name = entry.file_name().to_string_lossy();
                 if name.contains("agent.") || name.contains("gpg-agent") {
                     if let Ok(metadata) = entry.metadata() {
-                        if metadata.uid() != current_uid && nix::unistd::access(entry.path(), nix::unistd::AccessFlags::W_OK).is_ok() {
-                            details.push(format!("[!] CRITICAL: Writable SSH/GPG agent socket: {}", entry.path().display()));
+                        if metadata.uid() != current_uid
+                            && nix::unistd::access(entry.path(), nix::unistd::AccessFlags::W_OK)
+                                .is_ok()
+                        {
+                            details.push(format!(
+                                "[!] CRITICAL: Writable SSH/GPG agent socket: {}",
+                                entry.path().display()
+                            ));
                             finding.severity = Severity::Critical;
                         } else {
                             details.push(format!("Found agent socket: {}", entry.path().display()));
@@ -117,7 +144,11 @@ pub async fn check() -> Option<Finding> {
         if Path::new(f).exists() {
             if let Ok(content) = fs::read_to_string(f) {
                 details.push(format!("=== {} ===", f));
-                for line in content.lines().filter(|l| !l.trim().starts_with('#')).take(10) {
+                for line in content
+                    .lines()
+                    .filter(|l| !l.trim().starts_with('#'))
+                    .take(10)
+                {
                     details.push(format!("  {}", line.trim()));
                 }
             }

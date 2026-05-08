@@ -4,7 +4,12 @@ use colored::Colorize;
 /// 输出到终端（彩色）
 pub fn output(findings: &[Finding]) -> anyhow::Result<()> {
     println!("{}", "=".repeat(80).bright_blue());
-    println!("{}", "chitie - Linux Privilege Escalation Enumeration".bright_green().bold());
+    println!(
+        "{}",
+        "chitie - Linux Privilege Escalation Enumeration"
+            .bright_green()
+            .bold()
+    );
     println!("{}", "=".repeat(80).bright_blue());
     println!();
 
@@ -19,7 +24,12 @@ pub fn output(findings: &[Finding]) -> anyhow::Result<()> {
         // 打印类别标题
         if current_category != Some(finding.category) {
             println!();
-            println!("{}", format!("[ {} ]", finding.category.as_str()).bright_cyan().bold());
+            println!(
+                "{}",
+                format!("[ {} ]", finding.category.as_str())
+                    .bright_cyan()
+                    .bold()
+            );
             println!("{}", "-".repeat(80).bright_black());
             current_category = Some(finding.category);
         }

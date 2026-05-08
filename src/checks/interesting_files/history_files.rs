@@ -1,6 +1,6 @@
 use crate::{Category, Finding, Severity};
-use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use grep::regex::RegexMatcher;
+use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use ignore::WalkBuilder;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -23,7 +23,7 @@ pub async fn run() -> Option<Finding> {
 
     // Pattern from LinPEAS: pwd_inside_history
     let pattern = r"(?i)az login|enable_autologin|7z|unzip|useradd|linenum|linpeas|mkpasswd|htpasswd|openssl|PASSW|passw|shadow|roadrecon auth|root|snyk|sudo|^su|pkexec|^ftp|mongo|psql|mysql|rdesktop|Save-AzContext|xfreerdp|^ssh|steghide|@|KEY=|TOKEN=|BEARER=|Authorization:|chpasswd";
-    
+
     let matcher = match RegexMatcher::new_line_matcher(pattern) {
         Ok(m) => m,
         Err(_) => return None,
@@ -34,12 +34,19 @@ pub async fn run() -> Option<Finding> {
 
     // Common history files
     let history_files_patterns = vec![
-        ".bash_history", ".zsh_history", ".python_history", ".mysql_history", 
-        ".psql_history", ".nano_history", ".viminfo", ".lesshst", ".history"
+        ".bash_history",
+        ".zsh_history",
+        ".python_history",
+        ".mysql_history",
+        ".psql_history",
+        ".nano_history",
+        ".viminfo",
+        ".lesshst",
+        ".history",
     ];
 
     let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/home".to_string());
-    
+
     // We search in /home and /root
     let mut builder = WalkBuilder::new("/home");
     if std::path::Path::new("/root").exists() {
@@ -62,7 +69,7 @@ pub async fn run() -> Option<Finding> {
     builder.build_parallel().run(move || {
         let matcher = matcher.clone();
         let results = results_clone.clone();
-        
+
         Box::new(move |entry| {
             if start_time.elapsed() > timeout {
                 return ignore::WalkState::Quit;
@@ -86,7 +93,11 @@ pub async fn run() -> Option<Finding> {
 
             impl Sink for HistorySink {
                 type Error = std::io::Error;
-                fn matched(&mut self, _searcher: &Searcher, mat: &SinkMatch) -> Result<bool, Self::Error> {
+                fn matched(
+                    &mut self,
+                    _searcher: &Searcher,
+                    mat: &SinkMatch,
+                ) -> Result<bool, Self::Error> {
                     let line = String::from_utf8_lossy(mat.bytes()).trim().to_string();
                     if !line.is_empty() {
                         let mut guard = self.results.lock().unwrap();
@@ -116,10 +127,15 @@ pub async fn run() -> Option<Finding> {
         return None;
     }
 
-    finding.details.push(format!("Found {} sensitive entries in history files:", collected.len()));
+    finding.details.push(format!(
+        "Found {} sensitive entries in history files:",
+        collected.len()
+    ));
     finding.details.extend(collected.iter().take(100).cloned());
     if collected.len() > 100 {
-        finding.details.push(format!("... and {} more", collected.len() - 100));
+        finding
+            .details
+            .push(format!("... and {} more", collected.len() - 100));
     }
 
     Some(finding)

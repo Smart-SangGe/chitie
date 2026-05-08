@@ -18,7 +18,16 @@ pub async fn check() -> Option<Finding> {
     );
 
     let mut results = Vec::new();
-    let exclude_dirs = vec!["/proc", "/sys", "/dev", "/run", "/tmp", "/var/tmp", "/var/lib/docker", "/snap"];
+    let exclude_dirs = vec![
+        "/proc",
+        "/sys",
+        "/dev",
+        "/run",
+        "/tmp",
+        "/var/tmp",
+        "/var/lib/docker",
+        "/snap",
+    ];
 
     let search_paths = if config.stealth {
         vec!["/var/www", "/opt", "/home"]
@@ -48,10 +57,15 @@ pub async fn check() -> Option<Finding> {
                     if let Ok(metadata) = entry.metadata() {
                         let mode = metadata.permissions().mode();
                         // If readable by current user
-                        let is_readable = nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
-                        
+                        let is_readable =
+                            nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
+
                         if is_readable {
-                            results.push(format!("READABLE: {} (mode: {:o})", path_str, mode & 0o777));
+                            results.push(format!(
+                                "READABLE: {} (mode: {:o})",
+                                path_str,
+                                mode & 0o777
+                            ));
                             finding.severity = Severity::High;
                         } else {
                             results.push(format!("FOUND: {} (mode: {:o})", path_str, mode & 0o777));

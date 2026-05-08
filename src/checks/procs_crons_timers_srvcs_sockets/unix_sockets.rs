@@ -67,14 +67,7 @@ pub async fn check() -> Option<Finding> {
     }
 
     // 2. 查找系统中的所有socket文件（限制在常见目录）
-    let search_dirs = vec![
-        "/run",
-        "/tmp",
-        "/var/run",
-        "/var/tmp",
-        "/dev",
-        "/home",
-    ];
+    let search_dirs = vec!["/run", "/tmp", "/var/run", "/var/tmp", "/dev", "/home"];
 
     let mut all_sockets = Vec::new();
     for dir in search_dirs {
@@ -156,10 +149,7 @@ pub async fn check() -> Option<Finding> {
 
             // 检查弱权限
             if socket_info.mode == 0o777 || socket_info.mode == 0o666 {
-                details.push(format!(
-                    "  ⚠ WEAK PERMISSIONS: {:o}",
-                    socket_info.mode
-                ));
+                details.push(format!("  ⚠ WEAK PERMISSIONS: {:o}", socket_info.mode));
                 finding.severity = Severity::High;
             }
 
@@ -220,17 +210,17 @@ fn analyze_socket(socket_path: &str) -> Option<SocketInfo> {
     let group = get_groupname(gid).unwrap_or_else(|| gid.to_string());
 
     // 检查读写权限
-    let readable = path.metadata().map(|m| m.permissions()).ok()
+    let readable = path
+        .metadata()
+        .map(|m| m.permissions())
+        .ok()
         .map(|_p| {
             // 简单检查：尝试打开文件
             fs::File::open(path).is_ok()
         })
         .unwrap_or(false);
 
-    let writable = fs::OpenOptions::new()
-        .write(true)
-        .open(path)
-        .is_ok();
+    let writable = fs::OpenOptions::new().write(true).open(path).is_ok();
 
     // 构建权限字符串
     let mut permissions = Vec::new();

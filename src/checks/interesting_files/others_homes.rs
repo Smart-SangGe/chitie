@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 pub async fn check() -> Option<Finding> {
     let current_uid = getuid().as_raw();
     let home_dir = env::var("HOME").unwrap_or_else(|_| "/home".to_string());
-    
+
     let mut finding = Finding::new(
         Category::File,
         Severity::Info,
@@ -21,7 +21,7 @@ pub async fn check() -> Option<Finding> {
     );
 
     let mut results = Vec::new();
-    
+
     // Scan /home directory
     let home_base = "/home";
     if !std::path::Path::new(home_base).exists() {
@@ -32,7 +32,7 @@ pub async fn check() -> Option<Finding> {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
             let path_str = path.display().to_string();
-            
+
             // Skip current user's home
             if path_str == home_dir {
                 continue;
@@ -41,14 +41,24 @@ pub async fn check() -> Option<Finding> {
             if path.is_dir() {
                 if let Ok(metadata) = entry.metadata() {
                     let mode = metadata.permissions().mode();
-                    let is_readable = nix::unistd::access(&path, nix::unistd::AccessFlags::R_OK).is_ok();
-                    let is_writable = nix::unistd::access(&path, nix::unistd::AccessFlags::W_OK).is_ok();
+                    let is_readable =
+                        nix::unistd::access(&path, nix::unistd::AccessFlags::R_OK).is_ok();
+                    let is_writable =
+                        nix::unistd::access(&path, nix::unistd::AccessFlags::W_OK).is_ok();
 
                     if is_writable {
-                        results.push(format!("[!] WRITABLE: {} (mode: {:o})", path_str, mode & 0o777));
+                        results.push(format!(
+                            "[!] WRITABLE: {} (mode: {:o})",
+                            path_str,
+                            mode & 0o777
+                        ));
                         finding.severity = Severity::High;
                     } else if is_readable {
-                        results.push(format!("[!] READABLE: {} (mode: {:o})", path_str, mode & 0o777));
+                        results.push(format!(
+                            "[!] READABLE: {} (mode: {:o})",
+                            path_str,
+                            mode & 0o777
+                        ));
                         if finding.severity < Severity::Medium {
                             finding.severity = Severity::Medium;
                         }
@@ -61,7 +71,8 @@ pub async fn check() -> Option<Finding> {
                             .follow_links(false)
                             .into_iter()
                             .filter_map(|e| e.ok())
-                            .take(5) // Limit sub-files per home to keep output clean
+                            .take(5)
+                        // Limit sub-files per home to keep output clean
                         {
                             if sub_entry.path().is_file() {
                                 results.push(format!("    - {}", sub_entry.path().display()));

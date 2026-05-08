@@ -35,10 +35,7 @@ pub async fn check() -> Option<Finding> {
     let mut details = Vec::new();
 
     // 检查系统crontab文件
-    let cron_files = vec![
-        "/etc/crontab",
-        "/etc/anacrontab",
-    ];
+    let cron_files = vec!["/etc/crontab", "/etc/anacrontab"];
 
     for file in &cron_files {
         if let Ok(content) = fs::read_to_string(file) {

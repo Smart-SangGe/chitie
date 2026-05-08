@@ -25,8 +25,13 @@ pub async fn check() -> Option<Finding> {
         if path.exists() {
             if let Ok(metadata) = fs::metadata(path) {
                 let perms = metadata.mode() & 0o777;
-                details.push(format!("  {} (perm {:o}, owner {})", f, perms, metadata.uid()));
-                
+                details.push(format!(
+                    "  {} (perm {:o}, owner {})",
+                    f,
+                    perms,
+                    metadata.uid()
+                ));
+
                 if let Ok(content) = fs::read_to_string(path) {
                     for line in content.lines() {
                         let trimmed = line.trim();
@@ -52,12 +57,20 @@ pub async fn check() -> Option<Finding> {
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if path.file_name().map_or(false, |n| n == ".rhosts" || n == ".shosts") {
+        if path
+            .file_name()
+            .map_or(false, |n| n == ".rhosts" || n == ".shosts")
+        {
             found_rhosts = true;
             if let Ok(metadata) = entry.metadata() {
                 let perms = metadata.mode() & 0o777;
-                details.push(format!("  {} (perm {:o}, owner {})", path.display(), perms, metadata.uid()));
-                
+                details.push(format!(
+                    "  {} (perm {:o}, owner {})",
+                    path.display(),
+                    perms,
+                    metadata.uid()
+                ));
+
                 // Insecure perms check
                 if (perms & 0o022) != 0 {
                     details.push("    [!] Insecure permissions (group/other write)".to_string());
@@ -72,9 +85,12 @@ pub async fn check() -> Option<Finding> {
         // Check root separately
         let root_rhosts = Path::new("/root/.rhosts");
         if root_rhosts.exists() {
-             if let Ok(metadata) = fs::metadata(root_rhosts) {
-                details.push(format!("  /root/.rhosts (perm {:o})", metadata.mode() & 0o777));
-             }
+            if let Ok(metadata) = fs::metadata(root_rhosts) {
+                details.push(format!(
+                    "  /root/.rhosts (perm {:o})",
+                    metadata.mode() & 0o777
+                ));
+            }
         }
     }
 
@@ -97,7 +113,9 @@ pub async fn check() -> Option<Finding> {
     if let Ok(content) = fs::read_to_string("/etc/ssh/sshd_config") {
         if content.lines().any(|l| {
             let l = l.trim();
-            !l.starts_with('#') && l.to_lowercase().contains("hostbasedauthentication") && l.to_lowercase().contains("yes")
+            !l.starts_with('#')
+                && l.to_lowercase().contains("hostbasedauthentication")
+                && l.to_lowercase().contains("yes")
         }) {
             details.push("  HostbasedAuthentication enabled in /etc/ssh/sshd_config".to_string());
             if finding.severity < Severity::Medium {

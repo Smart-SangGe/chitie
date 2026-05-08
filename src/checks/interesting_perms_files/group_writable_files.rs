@@ -1,5 +1,5 @@
 use crate::{Category, Finding, Severity};
-use nix::unistd::{getgroups, getuid, Gid, Group};
+use nix::unistd::{Gid, Group, getgroups, getuid};
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
@@ -83,18 +83,32 @@ pub async fn check() -> Option<Finding> {
 
                 // Logic: group is in user's groups AND group-writable bit is set
                 if gids.contains(&gid) && (mode & 0o020 != 0) {
-                    let parent = path.parent().unwrap_or_else(|| Path::new("/")).display().to_string();
+                    let parent = path
+                        .parent()
+                        .unwrap_or_else(|| Path::new("/"))
+                        .display()
+                        .to_string();
                     let count = dir_counts.entry(parent.clone()).or_insert(0);
-                    
-                    let group_name = gid_to_name.get(&gid).cloned().unwrap_or_else(|| gid.to_string());
+
+                    let group_name = gid_to_name
+                        .get(&gid)
+                        .cloned()
+                        .unwrap_or_else(|| gid.to_string());
                     let results_list = group_results.entry(group_name).or_default();
 
                     if *count < 5 {
                         let type_str = if path.is_dir() { "DIR" } else { "FILE" };
-                        results_list.push(format!("  {} {} (mode: {:o})", type_str, path_str, mode & 0o777));
+                        results_list.push(format!(
+                            "  {} {} (mode: {:o})",
+                            type_str,
+                            path_str,
+                            mode & 0o777
+                        ));
                         *count += 1;
                     } else if *count == 5 {
-                        results_list.push("  #) You can write even more files inside last directory".to_string());
+                        results_list.push(
+                            "  #) You can write even more files inside last directory".to_string(),
+                        );
                         *count += 1; // Ensure we only print the message once
                     }
                 }

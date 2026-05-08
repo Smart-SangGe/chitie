@@ -93,7 +93,8 @@ pub async fn check() -> Option<Finding> {
                     }
 
                     // 构建详细信息
-                    let mut line = format!("{:o} uid:{} gid:{} {}", mode & 0o7777, uid, gid, path_str);
+                    let mut line =
+                        format!("{:o} uid:{} gid:{} {}", mode & 0o7777, uid, gid, path_str);
 
                     // 标记可写文件为高危
                     if is_writable {

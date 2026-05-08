@@ -36,11 +36,7 @@ pub async fn check() -> Option<Finding> {
     let mut details = Vec::new();
 
     // 检查systemctl是否可用
-    if Command::new("systemctl")
-        .arg("--version")
-        .output()
-        .is_err()
-    {
+    if Command::new("systemctl").arg("--version").output().is_err() {
         details.push("systemctl not available (not using systemd)".to_string());
         finding.details = details;
         return Some(finding);
@@ -180,8 +176,9 @@ pub async fn check() -> Option<Finding> {
 
                                 // 限制输出
                                 if dangerous_count >= 15 {
-                                    details
-                                        .push("  ... (showing first 15 dangerous services)".to_string());
+                                    details.push(
+                                        "  ... (showing first 15 dangerous services)".to_string(),
+                                    );
                                     break;
                                 }
                                 break;
@@ -252,8 +249,9 @@ fn check_known_vulnerabilities(version: &str, details: &mut Vec<String>, finding
 
         // CVE-2021-33910 (systemd-tmpfiles) - systemd 240-249
         if (240..=249).contains(&ver) {
-            details
-                .push("  ⚠ Potentially vulnerable to CVE-2021-33910 (systemd-tmpfiles)".to_string());
+            details.push(
+                "  ⚠ Potentially vulnerable to CVE-2021-33910 (systemd-tmpfiles)".to_string(),
+            );
             finding.severity = Severity::High;
         }
 

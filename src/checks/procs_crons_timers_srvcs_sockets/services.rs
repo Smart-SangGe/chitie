@@ -40,11 +40,7 @@ pub async fn check() -> Option<Finding> {
     let mut details = Vec::new();
 
     // 检查systemctl是否可用
-    if Command::new("systemctl")
-        .arg("--version")
-        .output()
-        .is_err()
-    {
+    if Command::new("systemctl").arg("--version").output().is_err() {
         details.push("systemctl not available (not using systemd?)".to_string());
         finding.details = details;
         return Some(finding);
@@ -53,7 +49,12 @@ pub async fn check() -> Option<Finding> {
     // 列出活动的services
     details.push("=== ACTIVE SERVICES ===".to_string());
     if let Ok(output) = Command::new("systemctl")
-        .args(&["list-units", "--type=service", "--state=active", "--no-pager"])
+        .args(&[
+            "list-units",
+            "--type=service",
+            "--state=active",
+            "--no-pager",
+        ])
         .output()
     {
         if output.status.success() {
@@ -220,7 +221,9 @@ fn check_service_file(
             if trimmed.starts_with("Exec") {
                 if let Some(exec_part) = trimmed.split('=').nth(1) {
                     // 去除前缀符号 (@, -, +, !)
-                    let exec_path = exec_part.trim().trim_start_matches(&['@', '-', '+', '!'][..]);
+                    let exec_path = exec_part
+                        .trim()
+                        .trim_start_matches(&['@', '-', '+', '!'][..]);
                     let exec_path = exec_path.split_whitespace().next().unwrap_or("");
 
                     if !exec_path.is_empty() && std::path::Path::new(exec_path).exists() {
@@ -255,11 +258,7 @@ fn check_service_file(
     }
 }
 
-fn check_service_content(
-    service_name: &str,
-    details: &mut Vec<String>,
-    finding: &mut Finding,
-) {
+fn check_service_content(service_name: &str, details: &mut Vec<String>, finding: &mut Finding) {
     // 检查service是否以root运行
     if let Ok(output) = Command::new("systemctl")
         .args(&["show", service_name, "-p", "User"])
@@ -268,8 +267,7 @@ fn check_service_content(
         if output.status.success() {
             let user = String::from_utf8_lossy(&output.stdout);
             // User=root 或者 User= (空表示root)
-            if user.contains("User=root") || (user.starts_with("User=") && user.trim() == "User=")
-            {
+            if user.contains("User=root") || (user.starts_with("User=") && user.trim() == "User=") {
                 // Service以root运行很常见，不单独报告
             }
         }
@@ -282,11 +280,7 @@ fn check_service_content(
     {
         if output.status.success() {
             let caps = String::from_utf8_lossy(&output.stdout);
-            let dangerous_caps = [
-                "CAP_SYS_ADMIN",
-                "CAP_DAC_OVERRIDE",
-                "CAP_DAC_READ_SEARCH",
-            ];
+            let dangerous_caps = ["CAP_SYS_ADMIN", "CAP_DAC_OVERRIDE", "CAP_DAC_READ_SEARCH"];
 
             for cap in &dangerous_caps {
                 if caps.contains(cap) {

@@ -8,10 +8,10 @@ mod my_user;
 mod password_policy;
 mod pgp_keys;
 mod pkexec;
+mod su_bruteforce;
 mod sudo_permissions;
 mod sudo_token;
 mod superusers;
-mod su_bruteforce;
 mod users_with_console;
 
 use crate::Finding;

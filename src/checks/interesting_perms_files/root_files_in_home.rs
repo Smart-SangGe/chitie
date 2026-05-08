@@ -34,9 +34,10 @@ pub async fn check() -> Option<Finding> {
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        
+
         if let Ok(metadata) = entry.metadata() {
-            if metadata.uid() == 0 { // Owned by root
+            if metadata.uid() == 0 {
+                // Owned by root
                 results.push(path.display().to_string());
             }
         }

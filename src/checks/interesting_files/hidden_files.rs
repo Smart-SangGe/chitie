@@ -31,14 +31,35 @@ pub async fn check() -> Option<Finding> {
 
     // Ignore list (exact names or starts with)
     let ignore_names = [
-        ".", "..", ".git", ".cache", ".config", ".local", ".gnupg", ".ssh", // .ssh is interesting but handled elsewhere? No, hidden files usually reports it.
-        // Actually .ssh IS interesting, let's not ignore it. 
+        ".",
+        "..",
+        ".git",
+        ".cache",
+        ".config",
+        ".local",
+        ".gnupg",
+        ".ssh", // .ssh is interesting but handled elsewhere? No, hidden files usually reports it.
+        // Actually .ssh IS interesting, let's not ignore it.
         // We filter out boring stuff.
-        ".mozilla", ".bash_history", ".zsh_history", ".history", // History handled elsewhere
-        ".viminfo", ".lesshst", ".sudo_as_admin_successful",
-        ".profile", ".bashrc", ".bash_logout", ".zshrc", // These are common config, not necessarily "hidden secret" but interesting.
-        ".cargo", ".rustup", ".npm", ".yarn", ".node_gyp",
-        ".vscode", ".idea", ".DS_Store",
+        ".mozilla",
+        ".bash_history",
+        ".zsh_history",
+        ".history", // History handled elsewhere
+        ".viminfo",
+        ".lesshst",
+        ".sudo_as_admin_successful",
+        ".profile",
+        ".bashrc",
+        ".bash_logout",
+        ".zshrc", // These are common config, not necessarily "hidden secret" but interesting.
+        ".cargo",
+        ".rustup",
+        ".npm",
+        ".yarn",
+        ".node_gyp",
+        ".vscode",
+        ".idea",
+        ".DS_Store",
     ];
 
     let mut hidden_files = Vec::new();
@@ -70,10 +91,14 @@ pub async fn check() -> Option<Finding> {
             if ignore_names.contains(&name) || name.ends_with(".swp") {
                 continue;
             }
-            
+
             // Filter out files inside ignored directories (simple heuristic)
             let path_str = path.to_string_lossy();
-            if path_str.contains("/.git/") || path_str.contains("/.cache/") || path_str.contains("/.config/") || path_str.contains("/node_modules/") {
+            if path_str.contains("/.git/")
+                || path_str.contains("/.cache/")
+                || path_str.contains("/.config/")
+                || path_str.contains("/node_modules/")
+            {
                 continue;
             }
 
@@ -85,11 +110,18 @@ pub async fn check() -> Option<Finding> {
         return None;
     }
 
-    finding.details.push(format!("Found {} interesting hidden files (showing top 30):", hidden_files.len()));
-    finding.details.extend(hidden_files.iter().take(30).cloned());
-    
+    finding.details.push(format!(
+        "Found {} interesting hidden files (showing top 30):",
+        hidden_files.len()
+    ));
+    finding
+        .details
+        .extend(hidden_files.iter().take(30).cloned());
+
     if hidden_files.len() > 30 {
-        finding.details.push(format!("... and {} more", hidden_files.len() - 30));
+        finding
+            .details
+            .push(format!("... and {} more", hidden_files.len() - 30));
     }
 
     Some(finding)

@@ -57,7 +57,9 @@ pub struct Cli {
 impl Cli {
     /// 转换为Config
     pub fn into_config(self) -> anyhow::Result<Config> {
-        let output_format: OutputFormat = self.output_format.parse()
+        let output_format: OutputFormat = self
+            .output_format
+            .parse()
             .map_err(|e| anyhow::anyhow!("{}", e))?;
 
         Ok(Config {

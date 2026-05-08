@@ -31,9 +31,10 @@ pub async fn check() -> Option<Finding> {
             let path = entry.path();
             if path.is_file() {
                 if let Ok(metadata) = entry.metadata() {
-                    let is_readable = nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
+                    let is_readable =
+                        nix::unistd::access(path, nix::unistd::AccessFlags::R_OK).is_ok();
                     let path_str = path.display().to_string();
-                    
+
                     if is_readable {
                         results.push(format!("READABLE: {}", path_str));
                         finding.severity = Severity::Medium;
@@ -42,7 +43,9 @@ pub async fn check() -> Option<Finding> {
                     }
                 }
             }
-            if results.len() >= 50 { break; }
+            if results.len() >= 50 {
+                break;
+            }
         }
     }
 

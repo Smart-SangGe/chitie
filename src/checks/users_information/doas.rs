@@ -62,7 +62,8 @@ pub async fn check() -> Option<Finding> {
             // Check for writability
             if let Ok(metadata) = fs::metadata(&file_path) {
                 let perms = metadata.permissions();
-                if perms.mode() & 0o002 != 0 { // Writable by others
+                if perms.mode() & 0o002 != 0 {
+                    // Writable by others
                     details.push("  ⚠ HIGH: Configuration file is writable by others!".to_string());
                     finding.severity = Severity::High;
                 }
@@ -81,7 +82,10 @@ pub async fn check() -> Option<Finding> {
                 }
 
                 if has_nopass {
-                    details.push("  ⚠ HIGH: Found 'nopass' rule, allowing passwordless execution.".to_string());
+                    details.push(
+                        "  ⚠ HIGH: Found 'nopass' rule, allowing passwordless execution."
+                            .to_string(),
+                    );
                     finding.severity = Severity::High;
                 }
 

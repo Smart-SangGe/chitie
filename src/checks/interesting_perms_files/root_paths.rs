@@ -50,7 +50,10 @@ pub async fn check() -> Option<Finding> {
 
         if let Ok(metadata) = fs::metadata(path) {
             if is_writable(&metadata) {
-                details.push(format!("CRITICAL: You have write privileges over {}", path_str));
+                details.push(format!(
+                    "CRITICAL: You have write privileges over {}",
+                    path_str
+                ));
                 high_severity = true;
             }
 
@@ -64,17 +67,24 @@ pub async fn check() -> Option<Finding> {
                     let entry_path = entry.path();
                     if let Ok(m) = entry.metadata() {
                         if is_writable(&m) {
-                            details.push(format!("HIGH: You have write privileges over {}", entry_path.display()));
+                            details.push(format!(
+                                "HIGH: You have write privileges over {}",
+                                entry_path.display()
+                            ));
                             high_severity = true;
                         }
-                        
+
                         // Check ownership (simplified: check if UID is not 0)
                         // In a real scenario we'd check if it matches current user UID
                         #[cfg(unix)]
                         {
                             use std::os::unix::fs::MetadataExt;
                             if m.uid() != 0 {
-                                details.push(format!("WARNING: {} is not owned by root (UID: {})", entry_path.display(), m.uid()));
+                                details.push(format!(
+                                    "WARNING: {} is not owned by root (UID: {})",
+                                    entry_path.display(),
+                                    m.uid()
+                                ));
                             }
                         }
                     }

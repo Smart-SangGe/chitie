@@ -1,6 +1,6 @@
 use crate::{Category, Finding, Severity};
-use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use grep::regex::RegexMatcher;
+use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use std::process::Command;
 use std::sync::{Arc, Mutex};
 use walkdir::WalkDir;
@@ -52,7 +52,7 @@ pub async fn check() -> Option<Finding> {
         if !entry.file_type().is_file() {
             continue;
         }
-        
+
         let path = entry.path().to_owned();
         let logs_clone_inner = logs_clone.clone();
         let matcher_inner = matcher.clone();
@@ -64,7 +64,11 @@ pub async fn check() -> Option<Finding> {
 
         impl Sink for AuditSink {
             type Error = std::io::Error;
-            fn matched(&mut self, _searcher: &Searcher, mat: &SinkMatch) -> Result<bool, Self::Error> {
+            fn matched(
+                &mut self,
+                _searcher: &Searcher,
+                mat: &SinkMatch,
+            ) -> Result<bool, Self::Error> {
                 let line = String::from_utf8_lossy(mat.bytes()).trim().to_string();
                 let mut guard = self.results.lock().unwrap();
                 guard.push(format!("{}: {}", self.path.display(), line));
@@ -75,15 +79,17 @@ pub async fn check() -> Option<Finding> {
         let mut searcher = SearcherBuilder::new()
             .binary_detection(BinaryDetection::quit(b'\x00'))
             .build();
-        
+
         let mut sink = AuditSink {
             path: path.clone(),
             results: logs_clone_inner,
         };
 
         let _ = searcher.search_path(&matcher_inner, &path, &mut sink);
-        
-        if logs_found.lock().unwrap().len() >= 50 { break; }
+
+        if logs_found.lock().unwrap().len() >= 50 {
+            break;
+        }
     }
 
     let collected_logs = logs_found.lock().unwrap();
