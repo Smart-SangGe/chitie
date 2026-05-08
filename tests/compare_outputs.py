@@ -34,6 +34,36 @@ STOPWORDS = {
     "checks",
 }
 
+NOISE_TOKENS = {
+    "available",
+    "check",
+    "checks",
+    "common",
+    "detected",
+    "details",
+    "done",
+    "enumeration",
+    "escalation",
+    "file",
+    "files",
+    "found",
+    "high",
+    "info",
+    "interesting",
+    "linpeas",
+    "medium",
+    "mode",
+    "not",
+    "output",
+    "potential",
+    "present",
+    "root",
+    "run",
+    "searching",
+    "system",
+    "warning",
+}
+
 
 def read_text(path: Path) -> str:
     return path.read_bytes().decode("utf-8", errors="ignore")
@@ -95,9 +125,7 @@ def extract_signals(text: str) -> tuple[set[str], list[str]]:
 
 
 def compute_metrics(chitie_signals: set[str], linpeas_signals: set[str]) -> dict:
-    shared = chitie_signals & linpeas_signals
-    only_chitie = chitie_signals - linpeas_signals
-    only_linpeas = linpeas_signals - chitie_signals
+    shared, only_chitie, only_linpeas = match_signals(chitie_signals, linpeas_signals)
 
     tp = len(shared)
     fp = len(only_chitie)
@@ -115,6 +143,80 @@ def compute_metrics(chitie_signals: set[str], linpeas_signals: set[str]) -> dict
         "sample_fp": sorted(list(only_chitie))[:10],
         "sample_fn": sorted(list(only_linpeas))[:10],
     }
+
+
+def signal_tokens(signal: str) -> set[str]:
+    return {token for token in signal.split() if token not in NOISE_TOKENS}
+
+
+def has_anchor(tokens: set[str]) -> bool:
+    return any(
+        token.startswith("/")
+        or token.startswith("cve-")
+        or token.startswith("cap_")
+        or token.endswith(".service")
+        or token.endswith(".timer")
+        or token in {"suid", "sgid", "sudo", "passwd", "shadow", "cron"}
+        for token in tokens
+    )
+
+
+def fuzzy_score(chitie_signal: str, linpeas_signal: str) -> float:
+    chitie_tokens = signal_tokens(chitie_signal)
+    linpeas_tokens = signal_tokens(linpeas_signal)
+    if len(chitie_tokens) < 2 or len(linpeas_tokens) < 2:
+        return 0.0
+
+    intersection = chitie_tokens & linpeas_tokens
+    if len(intersection) < 2:
+        return 0.0
+
+    shared_paths = {token for token in intersection if token.startswith("/")}
+    if shared_paths:
+        return 2.0 + (len(intersection) / max(len(chitie_tokens), len(linpeas_tokens)))
+
+    smaller = min(len(chitie_tokens), len(linpeas_tokens))
+    larger = max(len(chitie_tokens), len(linpeas_tokens))
+    containment = len(intersection) / smaller
+    coverage = len(intersection) / larger
+
+    # Path/CVE/capability anchored lines often differ only by explanatory text.
+    if has_anchor(chitie_tokens | linpeas_tokens):
+        if containment >= 0.60 and coverage >= 0.24:
+            return containment + coverage
+        return 0.0
+
+    # Non-anchored lines need a stronger overlap to avoid accidental matches.
+    if len(intersection) >= 3 and containment >= 0.65 and coverage >= 0.32:
+        return containment + coverage
+    return 0.0
+
+
+def match_signals(chitie_signals: set[str], linpeas_signals: set[str]) -> tuple[set[str], set[str], set[str]]:
+    exact_shared = chitie_signals & linpeas_signals
+    unmatched_chitie = set(chitie_signals - exact_shared)
+    unmatched_linpeas = set(linpeas_signals - exact_shared)
+    fuzzy_shared = set(exact_shared)
+
+    candidates = []
+    for linpeas_signal in unmatched_linpeas:
+        for chitie_signal in unmatched_chitie:
+            score = fuzzy_score(chitie_signal, linpeas_signal)
+            if score:
+                candidates.append((score, chitie_signal, linpeas_signal))
+
+    used_chitie = set()
+    used_linpeas = set()
+    for _, chitie_signal, linpeas_signal in sorted(candidates, reverse=True):
+        if chitie_signal in used_chitie or linpeas_signal in used_linpeas:
+            continue
+        used_chitie.add(chitie_signal)
+        used_linpeas.add(linpeas_signal)
+        fuzzy_shared.add(linpeas_signal)
+
+    only_chitie = unmatched_chitie - used_chitie
+    only_linpeas = unmatched_linpeas - used_linpeas
+    return fuzzy_shared, only_chitie, only_linpeas
 
 
 def missing_required_patterns(required_patterns: list[str], chitie_lines: list[str], linpeas_lines: list[str]) -> list[str]:
